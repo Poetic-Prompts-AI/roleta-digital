@@ -2,61 +2,116 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro - Roleta da Sorte!</title>
+  <title>Roleta da Sorte</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background: linear-gradient(to right, #0a0a0a, #250032);
-      font-family: sans-serif;
-      color: white;
+      background: linear-gradient(to right, #000000, #2e003e);
+      font-family: Arial, sans-serif;
+      color: #ffb600;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
 
-    .form-container {
+    .container {
       text-align: center;
     }
 
     h1 {
-      color: #ffb300;
+      margin-bottom: 30px;
+      font-size: 32px;
     }
 
-    input[type="text"],
-    input[type="email"] {
-      padding: 12px;
-      margin: 10px 0;
-      width: 250px;
+    input {
+      display: block;
+      width: 300px;
+      padding: 10px;
+      margin: 10px auto;
       border-radius: 5px;
       border: none;
+      font-size: 16px;
     }
 
     button {
-      padding: 10px 20px;
-      background-color: #ffb300;
+      background-color: orange;
+      color: white;
       border: none;
-      border-radius: 20px;
+      padding: 12px 30px;
+      border-radius: 25px;
       font-size: 16px;
       cursor: pointer;
-      color: white;
+      margin-top: 15px;
+      transition: background-color 0.3s;
     }
 
     button:hover {
-      background-color: #e69a00;
+      background-color: darkorange;
+    }
+
+    .logo {
+      margin-top: 40px;
+      cursor: pointer;
+    }
+
+    .logo img {
+      width: 200px;
+      transition: transform 0.3s;
+    }
+
+    .logo img:hover {
+      transform: scale(1.05);
+    }
+
+    .info {
+      font-size: 14px;
+      color: #aaa;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="form-container">
-    <h1>BOA SORTE!</h1>
-    <form action="roleta.html" method="GET">
-      <input type="text" name="nome" placeholder="Seu nome" required><br>
-      <input type="email" name="email" placeholder="Seu e-mail" required><br>
+  <div class="container">
+    <h1>GIRE E BOA SORTE!</h1>
+
+    <form onsubmit="return enviarParaRoleta()">
+      <input type="text" id="nome" placeholder="Seu nome" required>
+      <input type="email" id="email" placeholder="Seu e-mail" required>
       <button type="submit">Participar</button>
     </form>
+
+    <div class="logo" onclick="entrarEmFullscreen()">
+      <img src="LAB_X_2.png" alt="Logo Lab X">
+    </div>
+    <p class="info"></p>
   </div>
+
+  <script>
+    function enviarParaRoleta() {
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      if (!nome || !email) {
+        alert("Por favor, preencha nome e e-mail.");
+        return false;
+      }
+
+      localStorage.setItem("nome", nome);
+      localStorage.setItem("email", email);
+
+      window.location.href = "roleta.html";
+      return false; // impede recarregamento
+    }
+
+    function entrarEmFullscreen() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) el.msRequestFullscreen();
+    }
+  </script>
 </body>
 </html>
+
