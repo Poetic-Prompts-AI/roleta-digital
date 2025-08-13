@@ -4,12 +4,10 @@
   <meta charset="UTF-8" />
   <title>Roleta da Sorte — SPA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Preload para reduzir flicker -->
-  <link rel="preload" href="FUNDO2.png" as="image">
+  <link rel="preload" href="FUNDO.png" as="image">
   <link rel="preload" href="PREMIOS.png" as="image">
   <link rel="preload" href="MOLDURA.png" as="image">
   <style>
-    /* Paleta da identidade */
     :root{
       --bg-card:#f2d8c9;   /* fundos internos e tabelas */
       --accent:#404a91;    /* títulos / textos / bordas */
@@ -21,15 +19,13 @@
       height:100%; margin:0;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--accent);
-      background: url('FUNDO2.png') center/cover no-repeat fixed;
+      background: url('FUNDO.png') center/cover no-repeat fixed;
     }
     .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
-
-    /* Telas */
     .screen{display:none; width:100%; max-width:860px}
     .screen.active{display:block}
 
-    /* LOGIN (mantém a “caixa”) */
+    /* LOGIN (com “caixa”) */
     .card{
       background: var(--bg-card);
       border: 2px solid rgba(64,74,145,.25);
@@ -40,27 +36,20 @@
     }
     h1,h2{margin:0 0 10px; color:var(--accent)}
     p.sub{margin:4px 0 18px; opacity:.9}
-
     form{display:grid; gap:12px; margin-top:6px}
     input,button{padding:14px 16px; font-size:16px; border-radius:12px; border:2px solid transparent}
     input{background:#fff; color:#222; border-color:#ffffffaa; outline:none}
     input::placeholder{color:#777}
-
     .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px}
     .btn{background:var(--primary); color:#fff; border:0; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.25)}
     .btn.sec{background:#fff; color:var(--accent); border:2px solid var(--accent)}
     .btn:active{transform:translateY(1px)}
-
-    /* LOGO = fullscreen */
     .logo{margin-top:18px; display:inline-grid; gap:8px; justify-items:center; cursor:pointer; user-select:none}
     .logo img{width:min(260px, 60vw); border-radius:14px; display:block}
     .hint{font-size:13px; opacity:.85}
 
-    /* ROLETA (SEM CAIXA) */
-    .hero{
-      display:flex; flex-direction:column; align-items:center; gap:12px;
-      padding: 6px;
-    }
+    /* ROLETA (sem “caixa”) */
+    .hero{display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px}
     .roleta-area{position:relative; width:min(540px, 90vw); aspect-ratio:1/1; margin:6px auto 2px}
     .roleta{
       position:absolute; inset:0;
@@ -78,7 +67,7 @@
       width:0; height:0;
       border-left: 18px solid transparent;
       border-right: 18px solid transparent;
-      border-top: 38px solid var(--primary); /* cor da marca */
+      border-top: 38px solid var(--primary);
       filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
       z-index:3;
     }
@@ -95,21 +84,16 @@
 </head>
 <body>
   <div id="app" class="app">
-
-    <!-- ========== LOGIN ========== -->
+    <!-- LOGIN -->
     <section id="screen-login" class="screen active">
       <div class="card" style="max-width:540px">
         <h1>Roleta da Sorte</h1>
         <p class="sub">Preencha para participar</p>
-
         <form onsubmit="return irParaJogo()">
           <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" required />
           <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" autocomplete="tel" required />
-          <div class="row">
-            <button class="btn" type="submit">Participar</button>
-          </div>
+          <div class="row"><button class="btn" type="submit">Participar</button></div>
         </form>
-
         <div class="logo" onclick="entrarFullscreen()">
           <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
           <span class="hint">Toque no logo para tela cheia</span>
@@ -117,35 +101,30 @@
       </div>
     </section>
 
-    <!-- ========== ROLETA (SEM CAIXA) ========== -->
+    <!-- ROLETA -->
     <section id="screen-jogo" class="screen">
       <div class="hero">
         <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
-
         <div class="roleta-area">
           <div class="ponteiro" aria-hidden="true"></div>
           <div id="roleta" class="roleta" role="img" aria-label="Roleta de prêmios"></div>
           <div class="moldura" aria-hidden="true"></div>
         </div>
-
         <div class="row">
           <button id="btnGirar" class="btn">Girar Roleta</button>
           <button class="btn sec" onclick="showScreen('ranking')">Ver Ranking</button>
           <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
         </div>
-
         <div id="resultado" aria-live="polite"></div>
       </div>
     </section>
 
-    <!-- ========== RANKING ========== -->
+    <!-- RANKING -->
     <section id="screen-ranking" class="screen">
       <div class="panel">
         <h2>Ranking — 5 primeiros jogadores</h2>
         <table id="tbl">
-          <thead>
-            <tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr>
-          </thead>
+          <thead><tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr></thead>
           <tbody></tbody>
         </table>
         <div class="row" style="margin-top:12px">
@@ -154,11 +133,10 @@
         </div>
       </div>
     </section>
-
   </div>
 
   <script>
-    /* ========= Navegação e Fullscreen ========= */
+    /* Navegação / Fullscreen */
     function showScreen(name){
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById(`screen-${name}`).classList.add('active');
@@ -172,7 +150,7 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    /* ========= Login ========= */
+    /* Login */
     function irParaJogo(){
       const nome = document.getElementById('nome').value.trim();
       const fone = document.getElementById('fone').value.trim();
@@ -190,12 +168,9 @@
       if (el) el.textContent = nome;
     }
 
-    /* ========= ROLETA (SEM LIMITADORES) =========
-       >>> CORREÇÃO:
-       - Escolhemos PRIMEIRO o setor (índice) e
-       - Calculamos a rotação para cair EXATAMENTE no CENTRO desse setor.
-       Assim, o rótulo mostrado na tela SEMPRE é o mesmo do disco.
-    */
+    /* ===== ROLETA (sem limitadores) =====
+       CORREÇÃO: deslocamento fixo de **1 fatia** (phase) para bater com o PNG.
+       Isso garante que o setor escolhido é o mesmo visto pelo ponteiro. */
     const SETORES_LABELS = [
       "DONUT",
       "QUEM SABE NA PROXIMA",
@@ -209,65 +184,46 @@
       "NAO FOI DESSA VEZ",
       "TENTE OUTRA VEZ",
       "TENTE OUTRA VEZ"
-    ]; // ordem HORÁRIA a partir das 12h; mantenho a sua arte
+    ]; // ordem horária a partir das 12h (conforme arte)
 
-    const SETORES = SETORES_LABELS.length;
-    const setorDeg = 360 / SETORES;
-    const offsetBase = 0;          // ajuste fino manual, se precisar
-    let calibOffset = 0;           // auto-ajuste leve após a 1ª rodada
-    let giroAcumulado = 0;
-    let girando = false;
+    const N = SETORES_LABELS.length;
+    const setorDeg = 360 / N;
+    const phaseSectors = 1;                 // <<< ajuste: 1 fatia de deslocamento
+    const offsetBase = phaseSectors * setorDeg; // = +30°
+    let giro = 0, girando = false;
 
-    // calcula a rotação adicional para pousar no centro do setor escolhido
     function deltaParaSetor(idx){
-      const atual = ((giroAcumulado % 360) + 360) % 360;
+      const atual = ((giro % 360) + 360) % 360;
       const half = setorDeg / 2;
-      const alvoRel = (idx*setorDeg + half) % 360;  // centro do setor idx
-      const totalOffset = (offsetBase + calibOffset + 360) % 360;
-      const absolutoFinal = (360 - alvoRel + totalOffset + 360) % 360; // onde a roleta deve parar
+      const alvoRel = ((idx * setorDeg + half) % 360);
+      const absolutoFinal = (360 - alvoRel + offsetBase + 360) % 360;
       const deltaDentro360 = (absolutoFinal - atual + 360) % 360;
-      const voltas = 4 + Math.floor(Math.random()*3); // 4..6 voltas
-      return { delta: voltas*360 + deltaDentro360, absolutoFinal };
+      const voltas = 4 + Math.floor(Math.random()*3);
+      return { delta: voltas*360 + deltaDentro360, alvoAbs: absolutoFinal };
     }
 
     function girarRoleta(){
       if (girando) return;
-      const roleta = document.getElementById('roleta');
-      if (!roleta) return;
+      const roleta = document.getElementById('roleta'); if (!roleta) return;
+      girando = true; document.getElementById('resultado').textContent = '';
 
-      girando = true;
-      const saida = document.getElementById('resultado');
-      if (saida) saida.textContent = '';
+      // escolhe setor primeiro
+      const idx = Math.floor(Math.random()*N);
+      const { delta } = deltaParaSetor(idx);
 
-      // 1) escolhe o setor que vai sair
-      const idx = Math.floor(Math.random()*SETORES);
-
-      // 2) calcula rotação para o centro desse setor (garante consistência)
-      const { delta, absolutoFinal } = deltaParaSetor(idx);
-
-      // 3) anima até lá
-      giroAcumulado += delta;
+      giro += delta;
       roleta.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
-      roleta.style.transform = `rotate(${giroAcumulado}deg)`;
+      roleta.style.transform = `rotate(${giro}deg)`;
 
       setTimeout(()=>{
-        // 4) exibe exatamente o rótulo do setor escolhido
-        const label = SETORES_LABELS[idx];
-        if (saida) saida.textContent = `🎉 Resultado: ${label}`;
+        const label = SETORES_LABELS[idx];               // mostra exatamente o escolhido
+        document.getElementById('resultado').textContent = `🎉 Resultado: ${label}`;
 
-        // 5) auto-calibração mínima (se houver diferença sub-grau)
-        const pouso = ((giroAcumulado % 360) + 360) % 360;
-        let erro = (pouso - absolutoFinal + 540) % 360 - 180; // [-180,180)
-        if (Math.abs(erro) > 1){
-          calibOffset = (calibOffset + erro + 360) % 360;
-        }
-
-        // salva jogada para ranking
+        // registra para ranking
         const nome = localStorage.getItem('nome') || 'Participante';
         const fone = localStorage.getItem('fone') || '';
-        const login_ts = Number(localStorage.getItem('login_ts')) || Date.now();
-        const arr = carregarJogadas();
-        arr.push({nome, fone, premio: label, ts: login_ts});
+        const ts = Number(localStorage.getItem('login_ts')) || Date.now();
+        const arr = carregarJogadas(); arr.push({nome, fone, premio: label, ts});
         localStorage.setItem('jogadas_roleta_v1', JSON.stringify(arr));
 
         if (navigator.vibrate) navigator.vibrate([20,30,20]);
@@ -279,48 +235,30 @@
       if (btn) btn.addEventListener('click', girarRoleta);
     });
 
-    /* ========= Ranking (5 primeiros por telefone) ========= */
+    /* Ranking (5 primeiros por telefone) */
     function carregarJogadas(){
-      try{
-        const raw = localStorage.getItem('jogadas_roleta_v1');
-        return raw ? JSON.parse(raw) : [];
-      }catch{ return [] }
+      try{ const raw = localStorage.getItem('jogadas_roleta_v1'); return raw ? JSON.parse(raw) : []; }
+      catch{ return []; }
     }
     function mascararFone(f){
-      const d = (f||'').replace(/\D+/g,'');
-      if (d.length < 4) return f || '';
-      return '••• ' + d.slice(-4);
+      const d = (f||'').replace(/\D+/g,''); return d.length < 4 ? (f||'') : '••• ' + d.slice(-4);
     }
     function montarRanking(){
       const jogadas = carregarJogadas();
-      const vistos = new Set();
-      const primeiros = [];
-      for(const j of jogadas){
-        if(!vistos.has(j.fone)){
-          vistos.add(j.fone);
-          primeiros.push(j);
-        }
-        if (primeiros.length>=5) break;
-      }
-      const tbody = document.querySelector('#tbl tbody');
-      tbody.innerHTML = '';
+      const vistos = new Set(), primeiros = [];
+      for(const j of jogadas){ if(!vistos.has(j.fone)){ vistos.add(j.fone); primeiros.push(j); } if(primeiros.length>=5) break; }
+      const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML = '';
       if (!primeiros.length){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="4" style="padding:18px;opacity:.75;color:#666">Ainda não há jogadores registrados.</td>`;
-        tbody.appendChild(tr);
-        return;
+        const tr = document.createElement('tr'); tr.innerHTML = `<td colspan="4" style="padding:18px;opacity:.75;color:#666">Ainda não há jogadores registrados.</td>`;
+        tbody.appendChild(tr); return;
       }
-      primeiros.forEach((j, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${idx+1}</td><td>${j.nome}</td><td class="mask">${mascararFone(j.fone)}</td><td>${j.premio || '—'}</td>`;
-        tbody.appendChild(tr);
+      primeiros.forEach((j,i)=>{ const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${j.nome}</td><td class="mask">${mascararFone(j.fone)}</td><td>${j.premio||'—'}</td>`; tbody.appendChild(tr);
       });
     }
-    function limparRanking(){
-      localStorage.removeItem('jogadas_roleta_v1');
-      montarRanking();
-    }
+    function limparRanking(){ localStorage.removeItem('jogadas_roleta_v1'); montarRanking(); }
   </script>
 </body>
 </html>
+
 
