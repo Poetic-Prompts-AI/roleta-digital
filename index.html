@@ -182,12 +182,14 @@
     }
 
     /* ========= ROLETA (SEM LIMITADORES) =========
-       REGRA: o texto exibido é calculado a partir do ÂNGULO REAL onde a roleta parou,
-       com fase ajustada para a arte atual (corrige o “1 setor de diferença” que você viu).
+       >>> Correção de inversão:
+       - Usa o mesmo sentido do CSS (ângulo horário).
+       - O alvo do giro é o CENTRO do setor escolhido.
+       - O texto final é lido do ângulo REAL onde parou (garantia 100%).
+       Se a arte estiver meia-fatia deslocada, ajuste PHASE_SECTORS (-1,0,+1).
     */
 
-    /* Ordem HORÁRIA começando do TOPO (12h),
-       conferindo com a arte que você mostrou (SHOYU no topo). */
+    /* Ordem HORÁRIA a partir do TOPO (12h). Coloque aqui a ordem exatamente como no PNG. */
     const SECTORS = [
       "SHOYU",
       "QUASE... TENTE OUTRA VEZ",
@@ -204,34 +206,45 @@
     ];
 
     const N = SECTORS.length;
-    const DEGS = 360 / N;
+    const STEP = 360 / N;
 
-    /* Fase corrigida: -1 setor (o que estava saindo 1 à frente).
-       Se ainda notar 1 à direita/esquerda, mude para +1. */
-    const PHASE_SECTORS = -1;                 // <<< correção
-    const PHASE_DEG = PHASE_SECTORS * DEGS;
+    /* Deslocamento de fase (em setores) para alinhar com o PNG.
+       Se ainda notar que o texto fica uma fatia à frente/atrás, mude para -1 ou +1. */
+    const PHASE_SECTORS = 0;                // 0 = sem deslocamento; tente -1 ou +1 se precisar
+    const PHASE_DEG = PHASE_SECTORS * STEP;
 
     let totalDeg = 0;
     let spinning = false;
 
-    function sectorIndexFromAngle(absDeg){
-      // ângulo “visto” pelo ponteiro (12h), com a fase aplicada
-      const rel = (360 - absDeg + PHASE_DEG + 360) % 360;
-      // centraliza (evita bordas)
-      const idx = Math.floor(((rel + DEGS/2) % 360) / DEGS);
-      return idx % N;
+    /* Lê o índice a partir do ângulo real (mesmo sentido do CSS: horário) */
+    function idxFromAngle(absDeg){
+      // aplica fase, traz pra [0,360)
+      const rel = (absDeg + PHASE_DEG + 360) % 360;
+      // bota no centro do “bucket” pra evitar borda
+      return Math.floor(((rel + STEP/2) % 360) / STEP) % N;
+    }
+
+    /* Calcula o ângulo alvo (horário) para colocar o CENTRO do setor i no ponteiro */
+    function targetAngleForIndex(i){
+      const center = (i * STEP + STEP/2 - PHASE_DEG + 360) % 360; // mesmo sentido do CSS
+      const now = ((totalDeg % 360) + 360) % 360;
+      const delta360 = (center - now + 360) % 360;
+      const turns = 4 + Math.floor(Math.random()*3); // 4..6 voltas
+      return turns*360 + delta360;
     }
 
     function spin(){
       if (spinning) return;
-      const wheel = document.getElementById('roleta'); if(!wheel) return;
+      const wheel = document.getElementById('roleta');
+      if (!wheel) return;
+
       spinning = true;
       document.getElementById('resultado').textContent = '';
 
-      // giro aleatório (4–6 voltas + qualquer ângulo)
-      const turns = 4 + Math.floor(Math.random()*3);
-      const extra = Math.random()*360;
-      const delta = turns*360 + extra;
+      // 1) escolhe o setor
+      const chosen = Math.floor(Math.random()*N);
+      // 2) calcula rotação para o centro do setor (mesmo sentido)
+      const delta = targetAngleForIndex(chosen);
 
       totalDeg += delta;
       wheel.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
@@ -239,7 +252,8 @@
 
       setTimeout(()=>{
         const abs = ((totalDeg % 360) + 360) % 360;
-        const idx = sectorIndexFromAngle(abs);
+        // 3) lê do ângulo REAL onde parou (garantia absoluta)
+        const idx = idxFromAngle(abs);
         const label = SECTORS[idx];
 
         document.getElementById('resultado').textContent = `🎉 Resultado: ${label}`;
@@ -248,8 +262,8 @@
         const nome = localStorage.getItem('nome') || 'Participante';
         const fone = localStorage.getItem('fone') || '';
         const ts = Number(localStorage.getItem('login_ts')) || Date.now();
-        const arr = loadPlays(); arr.push({nome, fone, premio: label, ts});
-        localStorage.setItem('jogadas_roleta_v1', JSON.stringify(arr));
+        const rec = loadPlays(); rec.push({nome, fone, premio: label, ts});
+        localStorage.setItem('jogadas_roleta_v1', JSON.stringify(rec));
 
         if (navigator.vibrate) navigator.vibrate([20,30,20]);
         spinning = false;
@@ -267,24 +281,22 @@
     function maskPhone(f){
       const d = (f||'').replace(/\D+/g,''); return d.length < 4 ? (f||'') : '••• ' + d.slice(-4);
     }
-    function buildRanking(){
-      const plays = loadPlays();
+    function montarRanking(){
+      const arr = loadPlays();
       const seen = new Set(), firsts = [];
-      for(const p of plays){ if(!seen.has(p.fone)){ seen.add(p.fone); firsts.push(p); } if(firsts.length>=5) break; }
-      const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML='';
+      for(const j of arr){ if(!seen.has(j.fone)){ seen.add(j.fone); firsts.push(j); } if(firsts.length>=5) break; }
+      const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
       if(!firsts.length){
         const tr=document.createElement('tr'); tr.innerHTML=`<td colspan="4" style="padding:18px;opacity:.75;color:#666">Ainda não há jogadores registrados.</td>`;
-        tbody.appendChild(tr); return;
+        tb.appendChild(tr); return;
       }
-      firsts.forEach((p,i)=>{
+      firsts.forEach((j,i)=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${i+1}</td><td>${p.nome}</td><td class="mask">${maskPhone(p.fone)}</td><td>${p.premio||'—'}</td>`;
-        tbody.appendChild(tr);
+        tr.innerHTML=`<td>${i+1}</td><td>${j.nome}</td><td class="mask">${maskPhone(j.fone)}</td><td>${j.premio||'—'}</td>`;
+        tb.appendChild(tr);
       });
     }
-    function limparRanking(){ localStorage.removeItem('jogadas_roleta_v1'); buildRanking(); }
-
-    function montarRanking(){ buildRanking(); } // compat
+    function limparRanking(){ localStorage.removeItem('jogadas_roleta_v1'); montarRanking(); }
   </script>
 </body>
 </html>
