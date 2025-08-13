@@ -150,3 +150,4 @@ function girarRoleta(){
     girando = false;
   }, 4000);
 }
+
