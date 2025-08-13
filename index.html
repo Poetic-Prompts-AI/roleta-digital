@@ -124,7 +124,7 @@
     const N=LABELS.length, STEP=360/N;
 
     /* Se o PNG estiver levemente “adiantado/atrasado”, ajuste aqui em FATIAS: -1, 0 ou +1 */
-    const PHASE_SECTORS=0;
+    const PHASE_SECTORS=-1;
     const PHASE=PHASE_SECTORS*STEP;
 
     let total=0, spinning=false;
@@ -193,5 +193,6 @@
   </script>
 </body>
 </html>
+
 
 
