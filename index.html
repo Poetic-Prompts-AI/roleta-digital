@@ -4,28 +4,17 @@
   <meta charset="UTF-8" />
   <title>Roleta – Início</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preload" href="FUNDO2.png" as="image">
   <style>
-    :root{
-      --gold:#ffb600;
-      --bg1:#000000;
-      --bg2:#2e003e;
-    }
-    *{box-sizing:border-box}
+    :root{ --gold:#ffb600; }
+    *{ box-sizing:border-box }
     html,body{
       height:100%;
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--gold);
-      background: radial-gradient(80% 100% at 50% 0%, var(--bg2), var(--bg1)),
-                  url('FUNDO2.png') center/cover no-repeat fixed;
-    }
-    .wrap{
-      min-height:100%;
-      display:grid;
-      place-items:center;
-      padding:24px;
-      text-align:center;
+      /* MESMO FUNDO DA ROLETA */
+      background: url('FUNDO.png') center/cover no-repeat fixed;
+      display:grid; place-items:center;
     }
     .card{
       width:min(520px, 94vw);
@@ -35,68 +24,49 @@
       padding:24px 22px 28px;
       box-shadow: 0 10px 30px rgba(0,0,0,.45);
       backdrop-filter: blur(4px);
+      text-align:center;
     }
-    h1{margin:0 0 6px; font-size:clamp(22px, 3.2vw, 30px)}
-    p.sub{margin:.25rem 0 1.25rem; color:#ffd87a; opacity:.95}
-    form{display:grid; gap:12px; margin-top:10px}
+    h1{ margin:0 0 6px; font-size:clamp(22px, 3.2vw, 30px) }
+    p.sub{ margin:.25rem 0 1.25rem; color:#ffd87a; opacity:.95 }
+    form{ display:grid; gap:12px; margin-top:10px }
     input{
-      width:100%;
-      padding:14px 16px;
-      font-size:16px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.2);
-      outline:none;
-      background:rgba(255,255,255,.08);
-      color:#fff;
+      width:100%; padding:14px 16px; font-size:16px;
+      border-radius:12px; border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.08); color:#fff; outline:none;
     }
-    input::placeholder{color:#ddd}
+    input::placeholder{ color:#ddd }
     button[type=submit]{
-      margin-top:6px;
-      padding:14px 18px;
-      font-size:16px;
-      border:0;
-      border-radius:999px;
-      background:orange;
-      color:#fff;
-      cursor:pointer;
-      box-shadow:0 8px 18px rgba(0,0,0,.35);
+      margin-top:6px; padding:14px 18px; font-size:16px;
+      border:0; border-radius:999px; background:orange; color:#fff;
+      cursor:pointer; box-shadow:0 8px 18px rgba(0,0,0,.35);
     }
     .logo{
-      margin-top:18px;
-      display:inline-grid;
-      justify-items:center;
-      gap:8px;
-      cursor:pointer;
-      user-select:none;
+      margin-top:18px; display:inline-grid; justify-items:center; gap:8px;
+      cursor:pointer; user-select:none;
     }
     .logo img{
-      width:min(240px, 60vw);
-      height:auto;
-      display:block;
-      transition: transform .25s ease;
-      border-radius:14px;
+      width:min(240px, 60vw); height:auto; display:block;
+      transition: transform .25s ease; border-radius:14px;
     }
     .logo:hover img{ transform: scale(1.03) }
     .hint{font-size:13px; color:#e6e6e6; opacity:.85}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Roleta da Sorte</h1>
-      <p class="sub">Preencha e participe!</p>
+  <div class="card">
+    <h1>Roleta da Sorte</h1>
+    <p class="sub">Preencha para participar</p>
 
-      <form onsubmit="return irParaRoleta()">
-        <input id="nome" type="text" placeholder="Seu nome" required />
-        <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" required />
-        <button type="submit">Participar</button>
-      </form>
+    <form onsubmit="return irParaRoleta()">
+      <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" required />
+      <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" autocomplete="tel" required />
+      <button type="submit">Participar</button>
+    </form>
 
-      <!-- BOTÃO DE FULLSCREEN: LOGOLAB.png -->
-      <div class="logo" onclick="entrarFullscreen()">
-        <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
-        <span class="hint">Toque no logo para tela cheia</span>
-      </div>
+    <!-- LOGO = BOTÃO DE FULLSCREEN -->
+    <div class="logo" onclick="entrarFullscreen()">
+      <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
+      <span class="hint">Toque no logo para tela cheia</span>
     </div>
   </div>
 
@@ -104,13 +74,18 @@
     function irParaRoleta(){
       const nome = document.getElementById('nome').value.trim();
       const fone = document.getElementById('fone').value.trim();
-      if(!nome || !fone){ return false; }
+      if(!nome || !fone) return false;
+
       localStorage.setItem('nome', nome);
       localStorage.setItem('fone', fone);
+
+      // marca a hora de entrada (para ranking de primeiros)
+      const stamp = Date.now();
+      localStorage.setItem('login_ts', String(stamp));
+
       window.location.href = 'roleta.html';
       return false;
     }
-
     function entrarFullscreen(){
       const el = document.documentElement;
       if (el.requestFullscreen) el.requestFullscreen();
@@ -120,6 +95,3 @@
   </script>
 </body>
 </html>
-
-
-
