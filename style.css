@@ -1,11 +1,10 @@
-/* Fundo geral */
+/* Fundo e tipografia compartilhados com a roleta */
 .bg-roleta{
   margin:0;
   min-height:100vh;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:#fff;
-  background: url('FUNDO2.png') center/cover no-repeat fixed,
-              radial-gradient(100% 120% at 50% 0%, #1a0030, #000);
+  background: url('FUNDO.png') center/cover no-repeat fixed;
   display:grid; place-items:center;
   text-align:center;
 }
@@ -52,20 +51,20 @@ h2{
   width:0; height:0;
   border-left: 18px solid transparent;
   border-right: 18px solid transparent;
-  border-top: 36px solid #ff3b6a; /* rosa/verm */
+  border-top: 36px solid #ff3b6a;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
   z-index:3;
 }
 
 /* Botões */
-.controls{ display:flex; gap:10px; margin-top:6px; }
+.controls{ display:flex; gap:10px; margin-top:6px; flex-wrap:wrap; justify-content:center }
 button{
   padding:12px 26px; font-size:16px; border:0; border-radius:999px;
   background:orange; color:#fff; cursor:pointer;
   box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
-button.sec{ background:#444; }
-button[disabled]{ opacity:.6; cursor:not-allowed; }
+button.sec{ background:#444 }
+button[disabled]{ opacity:.6; cursor:not-allowed }
 
 /* Resultado */
 #resultado{
