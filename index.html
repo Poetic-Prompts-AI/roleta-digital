@@ -2,89 +2,159 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Roleta – Início</title>
+  <title>Roleta da Sorte — SPA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preload" href="FUNDO.png" as="image">
+  <link rel="preload" href="PREMIOS.png" as="image">
+  <link rel="preload" href="MOLDURA.png" as="image">
   <style>
-    :root{ --gold:#ffb600; }
-    *{ box-sizing:border-box }
+    :root{
+      --bg-card:#f2d8c9;   /* fundo interno */
+      --accent:#404a91;    /* títulos/textos */
+      --primary:#ce2e3a;   /* botões/ponteiro */
+      --ok:#1b8f5a;
+    }
+    *{box-sizing:border-box}
     html,body{
-      height:100%;
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--gold);
-      /* MESMO FUNDO DA ROLETA */
-      background: url('FUNDO2.png') center/cover no-repeat fixed;
-      display:grid; place-items:center;
+      height:100%; margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--accent);
+      background: url('FUNDO.png') center/cover no-repeat fixed;
     }
+    .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
+
+    .screen{display:none; width:100%; max-width:860px}
+    .screen.active{display:block}
+
+    /* LOGIN (com “caixa”) */
     .card{
-      width:min(520px, 94vw);
-      background: rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:20px;
-      padding:24px 22px 28px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.45);
-      backdrop-filter: blur(4px);
-      text-align:center;
+      background: var(--bg-card);
+      border: 2px solid rgba(64,74,145,.25);
+      border-radius: 20px;
+      padding: 24px 22px 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      margin-inline:auto;
     }
-    h1{ margin:0 0 6px; font-size:clamp(22px, 3.2vw, 30px) }
-    p.sub{ margin:.25rem 0 1.25rem; color:#ffd87a; opacity:.95 }
-    form{ display:grid; gap:12px; margin-top:10px }
-    input{
-      width:100%; padding:14px 16px; font-size:16px;
-      border-radius:12px; border:1px solid rgba(255,255,255,.2);
-      background:rgba(255,255,255,.08); color:#fff; outline:none;
+    h1,h2{margin:0 0 10px; color:var(--accent)}
+    p.sub{margin:4px 0 18px; opacity:.9}
+    form{display:grid; gap:12px; margin-top:6px}
+    input,button{padding:14px 16px; font-size:16px; border-radius:12px; border:2px solid transparent}
+    input{background:#fff; color:#222; border-color:#ffffffaa; outline:none}
+    input::placeholder{color:#777}
+    .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px}
+    .btn{background:var(--primary); color:#fff; border:0; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .btn.sec{background:#fff; color:var(--accent); border:2px solid var(--accent)}
+    .btn:active{transform:translateY(1px)}
+
+    .logo{margin-top:18px; display:inline-grid; gap:8px; justify-items:center; cursor:pointer; user-select:none}
+    .logo img{width:min(260px, 60vw); border-radius:14px; display:block}
+    .hint{font-size:13px; opacity:.85}
+
+    /* ROLETA (sem “caixa”) */
+    .hero{display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px}
+    .roleta-area{position:relative; width:min(540px, 90vw); aspect-ratio:1/1; margin:6px auto 2px}
+    .roleta{
+      position:absolute; inset:0;
+      background: url('PREMIOS.png') center/contain no-repeat;
+      border-radius:50%;
+      transition: transform 4s cubic-bezier(.18,.72,.14,1);
     }
-    input::placeholder{ color:#ddd }
-    button[type=submit]{
-      margin-top:6px; padding:14px 18px; font-size:16px;
-      border:0; border-radius:999px; background:orange; color:#fff;
-      cursor:pointer; box-shadow:0 8px 18px rgba(0,0,0,.35);
+    .moldura{
+      position:absolute; inset:0;
+      background: url('MOLDURA.png') center/contain no-repeat;
+      pointer-events:none;
     }
-    .logo{
-      margin-top:18px; display:inline-grid; justify-items:center; gap:8px;
-      cursor:pointer; user-select:none;
+    .ponteiro{
+      position:absolute; left:50%; top:-16px; transform:translateX(-50%);
+      width:0; height:0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 38px solid var(--primary);
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
+      z-index:3;
     }
-    .logo img{
-      width:min(240px, 60vw); height:auto; display:block;
-      transition: transform .25s ease; border-radius:14px;
-    }
-    .logo:hover img{ transform: scale(1.03) }
-    .hint{font-size:13px; color:#e6e6e6; opacity:.85}
+    #resultado{min-height:28px; font-weight:700; color:var(--ok)}
+
+    /* RANKING */
+    .panel{background:var(--bg-card); border:2px solid rgba(64,74,145,.25); border-radius:20px; padding:18px}
+    table{width:100%; border-collapse:collapse; background:#fff; color:#222; border-radius:12px; overflow:hidden}
+    th,td{padding:10px 8px; border-bottom:1px solid #e9e9f1}
+    th{background:#eef0ff; color:var(--accent); text-transform:uppercase; font-size:12px; letter-spacing:.06em}
+    tr:last-child td{border-bottom:0}
+    .mask{font-variant-numeric: tabular-nums}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Roleta da Sorte</h1>
-    <p class="sub">Preencha para participar</p>
+  <div id="app" class="app">
 
-    <form onsubmit="return irParaRoleta()">
-      <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" required />
-      <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" autocomplete="tel" required />
-      <button type="submit">Participar</button>
-    </form>
+    <!-- ========== LOGIN ========== -->
+    <section id="screen-login" class="screen active">
+      <div class="card" style="max-width:540px">
+        <h1>Roleta da Sorte</h1>
+        <p class="sub">Preencha para participar</p>
 
-    <!-- LOGO = BOTÃO DE FULLSCREEN -->
-    <div class="logo" onclick="entrarFullscreen()">
-      <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
-      <span class="hint">Toque no logo para tela cheia</span>
-    </div>
+        <form onsubmit="return irParaJogo()">
+          <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" required />
+          <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" autocomplete="tel" required />
+          <div class="row">
+            <button class="btn" type="submit">Participar</button>
+          </div>
+        </form>
+
+        <div class="logo" onclick="entrarFullscreen()">
+          <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
+          <span class="hint">Toque no logo para tela cheia</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ROLETA (SEM CAIXA) ========== -->
+    <section id="screen-jogo" class="screen">
+      <div class="hero">
+        <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
+
+        <div class="roleta-area">
+          <div class="ponteiro" aria-hidden="true"></div>
+          <div id="roleta" class="roleta" role="img" aria-label="Roleta de prêmios"></div>
+          <div class="moldura" aria-hidden="true"></div>
+        </div>
+
+        <div class="row">
+          <button id="btnGirar" class="btn">Girar Roleta</button>
+          <button class="btn sec" onclick="showScreen('ranking')">Ver Ranking</button>
+          <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
+        </div>
+
+        <div id="resultado" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ========== RANKING ========== -->
+    <section id="screen-ranking" class="screen">
+      <div class="panel">
+        <h2>Ranking — 5 primeiros jogadores</h2>
+        <table id="tbl">
+          <thead>
+            <tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" onclick="showScreen('login')">Voltar ao início</button>
+          <button class="btn sec" onclick="limparRanking()">Limpar ranking (local)</button>
+        </div>
+      </div>
+    </section>
+
   </div>
 
   <script>
-    function irParaRoleta(){
-      const nome = document.getElementById('nome').value.trim();
-      const fone = document.getElementById('fone').value.trim();
-      if(!nome || !fone) return false;
-
-      localStorage.setItem('nome', nome);
-      localStorage.setItem('fone', fone);
-
-      // marca a hora de entrada (para ranking de primeiros)
-      const stamp = Date.now();
-      localStorage.setItem('login_ts', String(stamp));
-
-      window.location.href = 'roleta.html';
-      return false;
+    /* ========= Navegação / Fullscreen ========= */
+    function showScreen(name){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      document.getElementById(`screen-${name}`).classList.add('active');
+      if (name==='ranking') montarRanking();
+      if (name==='jogo') preencherNome();
     }
     function entrarFullscreen(){
       const el = document.documentElement;
@@ -92,6 +162,141 @@
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
+
+    /* ========= Login ========= */
+    function irParaJogo(){
+      const nome = document.getElementById('nome').value.trim();
+      const fone = document.getElementById('fone').value.trim();
+      if(!nome || !fone) return false;
+      localStorage.setItem('nome', nome);
+      localStorage.setItem('fone', fone);
+      localStorage.setItem('login_ts', String(Date.now()));
+      preencherNome();
+      showScreen('jogo');
+      return false;
+    }
+    function preencherNome(){
+      const nome = localStorage.getItem('nome') || 'Participante';
+      const el = document.getElementById('nomeUsuario');
+      if (el) el.textContent = nome;
+    }
+
+    /* ========= ROLETA (SEM LIMITADORES) =========
+       >>> Correção de inversão:
+       - Usa o mesmo sentido do CSS (ângulo horário).
+       - O alvo do giro é o CENTRO do setor escolhido.
+       - O texto final é lido do ângulo REAL onde parou (garantia 100%).
+       Se a arte estiver meia-fatia deslocada, ajuste PHASE_SECTORS (-1,0,+1).
+    */
+
+    /* Ordem HORÁRIA a partir do TOPO (12h). Coloque aqui a ordem exatamente como no PNG. */
+    const SECTORS = [
+      "SHOYU",
+      "QUASE... TENTE OUTRA VEZ",
+      "MOLHO YAKISSOBA",
+      "NAO FOI DESSA VEZ",
+      "DONUT",
+      "QUEM SABE NA PROXIMA",
+      "MARCA PAGINA",
+      "RESPIRA... E GIRA DE NOVO",
+      "TENTE OUTRA VEZ",
+      "GIRA DE NOVO",
+      "TENTE OUTRA VEZ",
+      "TENTE OUTRA VEZ"
+    ];
+
+    const N = SECTORS.length;
+    const STEP = 360 / N;
+
+    /* Deslocamento de fase (em setores) para alinhar com o PNG.
+       Se ainda notar que o texto fica uma fatia à frente/atrás, mude para -1 ou +1. */
+    const PHASE_SECTORS = 0;                // 0 = sem deslocamento; tente -1 ou +1 se precisar
+    const PHASE_DEG = PHASE_SECTORS * STEP;
+
+    let totalDeg = 0;
+    let spinning = false;
+
+    /* Lê o índice a partir do ângulo real (mesmo sentido do CSS: horário) */
+    function idxFromAngle(absDeg){
+      // aplica fase, traz pra [0,360)
+      const rel = (absDeg + PHASE_DEG + 360) % 360;
+      // bota no centro do “bucket” pra evitar borda
+      return Math.floor(((rel + STEP/2) % 360) / STEP) % N;
+    }
+
+    /* Calcula o ângulo alvo (horário) para colocar o CENTRO do setor i no ponteiro */
+    function targetAngleForIndex(i){
+      const center = (i * STEP + STEP/2 - PHASE_DEG + 360) % 360; // mesmo sentido do CSS
+      const now = ((totalDeg % 360) + 360) % 360;
+      const delta360 = (center - now + 360) % 360;
+      const turns = 4 + Math.floor(Math.random()*3); // 4..6 voltas
+      return turns*360 + delta360;
+    }
+
+    function spin(){
+      if (spinning) return;
+      const wheel = document.getElementById('roleta');
+      if (!wheel) return;
+
+      spinning = true;
+      document.getElementById('resultado').textContent = '';
+
+      // 1) escolhe o setor
+      const chosen = Math.floor(Math.random()*N);
+      // 2) calcula rotação para o centro do setor (mesmo sentido)
+      const delta = targetAngleForIndex(chosen);
+
+      totalDeg += delta;
+      wheel.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
+      wheel.style.transform = `rotate(${totalDeg}deg)`;
+
+      setTimeout(()=>{
+        const abs = ((totalDeg % 360) + 360) % 360;
+        // 3) lê do ângulo REAL onde parou (garantia absoluta)
+        const idx = idxFromAngle(abs);
+        const label = SECTORS[idx];
+
+        document.getElementById('resultado').textContent = `🎉 Resultado: ${label}`;
+
+        // ranking
+        const nome = localStorage.getItem('nome') || 'Participante';
+        const fone = localStorage.getItem('fone') || '';
+        const ts = Number(localStorage.getItem('login_ts')) || Date.now();
+        const rec = loadPlays(); rec.push({nome, fone, premio: label, ts});
+        localStorage.setItem('jogadas_roleta_v1', JSON.stringify(rec));
+
+        if (navigator.vibrate) navigator.vibrate([20,30,20]);
+        spinning = false;
+      }, 4000);
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('btnGirar')?.addEventListener('click', spin);
+    });
+
+    /* ========= Ranking ========= */
+    function loadPlays(){
+      try{ const raw = localStorage.getItem('jogadas_roleta_v1'); return raw ? JSON.parse(raw) : []; }
+      catch{ return []; }
+    }
+    function maskPhone(f){
+      const d = (f||'').replace(/\D+/g,''); return d.length < 4 ? (f||'') : '••• ' + d.slice(-4);
+    }
+    function montarRanking(){
+      const arr = loadPlays();
+      const seen = new Set(), firsts = [];
+      for(const j of arr){ if(!seen.has(j.fone)){ seen.add(j.fone); firsts.push(j); } if(firsts.length>=5) break; }
+      const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
+      if(!firsts.length){
+        const tr=document.createElement('tr'); tr.innerHTML=`<td colspan="4" style="padding:18px;opacity:.75;color:#666">Ainda não há jogadores registrados.</td>`;
+        tb.appendChild(tr); return;
+      }
+      firsts.forEach((j,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${i+1}</td><td>${j.nome}</td><td class="mask">${maskPhone(j.fone)}</td><td>${j.premio||'—'}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+    function limparRanking(){ localStorage.removeItem('jogadas_roleta_v1'); montarRanking(); }
   </script>
 </body>
 </html>
