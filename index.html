@@ -5,11 +5,11 @@
   <title>Roleta da Sorte — SPA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Preload para reduzir flicker -->
-  <link rel="preload" href="FUNDO2.png" as="image">
+  <link rel="preload" href="FUNDO.png" as="image">
   <link rel="preload" href="PREMIOS.png" as="image">
   <link rel="preload" href="MOLDURA.png" as="image">
   <style>
-    /* Paleta de identidade */
+    /* Paleta da identidade */
     :root{
       --bg-card:#f2d8c9;   /* fundos internos e tabelas */
       --accent:#404a91;    /* títulos / textos / bordas */
@@ -21,7 +21,7 @@
       height:100%; margin:0;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--accent);
-      background: url('FUNDO2.png') center/cover no-repeat fixed;
+      background: url('FUNDO.png') center/cover no-repeat fixed;
     }
     .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
 
@@ -158,7 +158,7 @@
   </div>
 
   <script>
-    /* ===== Navegação / Fullscreen ===== */
+    /* ========= Navegação e Fullscreen ========= */
     function showScreen(name){
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById(`screen-${name}`).classList.add('active');
@@ -172,7 +172,7 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    /* ===== Login ===== */
+    /* ========= Login ========= */
     function irParaJogo(){
       const nome = document.getElementById('nome').value.trim();
       const fone = document.getElementById('fone').value.trim();
@@ -190,12 +190,12 @@
       if (el) el.textContent = nome;
     }
 
-    /* ===== Roleta (SEM LIMITADORES) =====
-       Garantia de consistência:
-       1) Escolhemos um ÂNGULO final (4~6 voltas + ângulo aleatório).
-       2) Após a animação, calculamos o ÍNDICE pelo ÂNGULO REAL pousado.
-       -> A mensagem exibida SEMPRE reflete o setor visual da imagem.
-       3) Auto-calibração: se detectar desvio entre alvo e pouso, ajusta offset interno para as próximas rodadas. */
+    /* ========= ROLETA (SEM LIMITADORES) =========
+       >>> CORREÇÃO:
+       - Escolhemos PRIMEIRO o setor (índice) e
+       - Calculamos a rotação para cair EXATAMENTE no CENTRO desse setor.
+       Assim, o rótulo mostrado na tela SEMPRE é o mesmo do disco.
+    */
     const SETORES_LABELS = [
       "DONUT",
       "QUEM SABE NA PROXIMA",
@@ -209,23 +209,25 @@
       "NAO FOI DESSA VEZ",
       "TENTE OUTRA VEZ",
       "TENTE OUTRA VEZ"
-    ]; // Ordem horária a partir do topo (12h). Mantenho como já estava.
+    ]; // ordem HORÁRIA a partir das 12h; mantenho a sua arte
 
     const SETORES = SETORES_LABELS.length;
     const setorDeg = 360 / SETORES;
-
-    // offset interno (auto-calibra se notar qualquer desvio)
-    let calibOffset = 0;        // em graus; começa 0 e ajusta se necessário
-    let giroAcumulado = 0;      // rotação acumulada
+    const offsetBase = 0;          // ajuste fino manual, se precisar
+    let calibOffset = 0;           // auto-ajuste leve após a 1ª rodada
+    let giroAcumulado = 0;
     let girando = false;
 
-    // Calcula índice a partir de um ângulo absoluto (roleta parada nesse ângulo)
-    function indexFromAngle(absoluto){
-      // ângulo visto pelo ponteiro (12h), com correção de offset
-      const relativo = (360 - absoluto + calibOffset + 360) % 360;
-      // "empurra" levemente para o centro pra evitar ruído na borda
-      const epsilon = 0.0001;
-      return Math.floor(((relativo + epsilon) / setorDeg)) % SETORES;
+    // calcula a rotação adicional para pousar no centro do setor escolhido
+    function deltaParaSetor(idx){
+      const atual = ((giroAcumulado % 360) + 360) % 360;
+      const half = setorDeg / 2;
+      const alvoRel = (idx*setorDeg + half) % 360;  // centro do setor idx
+      const totalOffset = (offsetBase + calibOffset + 360) % 360;
+      const absolutoFinal = (360 - alvoRel + totalOffset + 360) % 360; // onde a roleta deve parar
+      const deltaDentro360 = (absolutoFinal - atual + 360) % 360;
+      const voltas = 4 + Math.floor(Math.random()*3); // 4..6 voltas
+      return { delta: voltas*360 + deltaDentro360, absolutoFinal };
     }
 
     function girarRoleta(){
@@ -237,37 +239,30 @@
       const saida = document.getElementById('resultado');
       if (saida) saida.textContent = '';
 
-      // destino aleatório: 4~6 voltas + ângulo dentro do setor
-      const voltas = 4 + Math.floor(Math.random()*3); // 4..6
-      const alvoDentro = Math.random()*360;           // 0..360 (setor aleatório)
-      const delta = voltas*360 + alvoDentro;
+      // 1) escolhe o setor que vai sair
+      const idx = Math.floor(Math.random()*SETORES);
 
-      // animação
+      // 2) calcula rotação para o centro desse setor (garante consistência)
+      const { delta, absolutoFinal } = deltaParaSetor(idx);
+
+      // 3) anima até lá
       giroAcumulado += delta;
       roleta.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
       roleta.style.transform = `rotate(${giroAcumulado}deg)`;
 
-      // quando parar, mede o ÂNGULO REAL e extrai o setor
       setTimeout(()=>{
-        const absoluto = ((giroAcumulado % 360) + 360) % 360;
-        const idx = indexFromAngle(absoluto);
+        // 4) exibe exatamente o rótulo do setor escolhido
         const label = SETORES_LABELS[idx];
+        if (saida) saida.textContent = `🎉 Resultado: ${label}`;
 
-        // (auto-calibração opcional e silenciosa)
-        // Calcula qual seria o centro geométrico do setor idx
-        const half = setorDeg/2;
-        const alvoRel = (idx*setorDeg + half) % 360;
-        const deveriaPararEm = (360 - alvoRel + calibOffset + 360) % 360; // ângulo absoluto ideal
-        let erro = (absoluto - deveriaPararEm + 540) % 360 - 180; // erro em [-180,180)
-        // Se erro > 1.5°, corrige offset para as PRÓXIMAS rodadas
-        if (Math.abs(erro) > 1.5){
+        // 5) auto-calibração mínima (se houver diferença sub-grau)
+        const pouso = ((giroAcumulado % 360) + 360) % 360;
+        let erro = (pouso - absolutoFinal + 540) % 360 - 180; // [-180,180)
+        if (Math.abs(erro) > 1){
           calibOffset = (calibOffset + erro + 360) % 360;
         }
 
-        // exibe o resultado (sempre o que o ponteiro aponta visualmente)
-        if (saida) saida.textContent = `🎉 Resultado: ${label}`;
-
-        // salva jogada p/ ranking
+        // salva jogada para ranking
         const nome = localStorage.getItem('nome') || 'Participante';
         const fone = localStorage.getItem('fone') || '';
         const login_ts = Number(localStorage.getItem('login_ts')) || Date.now();
@@ -284,7 +279,7 @@
       if (btn) btn.addEventListener('click', girarRoleta);
     });
 
-    /* ===== Ranking (5 primeiros por telefone) ===== */
+    /* ========= Ranking (5 primeiros por telefone) ========= */
     function carregarJogadas(){
       try{
         const raw = localStorage.getItem('jogadas_roleta_v1');
@@ -328,9 +323,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
