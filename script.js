@@ -1,75 +1,152 @@
-// ====== DADOS DO USUÁRIO ======
+// ===== DADOS DO USUÁRIO NA TELA =====
 window.addEventListener('DOMContentLoaded', () => {
   const nome = localStorage.getItem('nome') || 'Participante';
-  document.getElementById('nomeUsuario')?.append(document.createTextNode(nome));
+  const el = document.getElementById('nomeUsuario');
+  if (el && !el.textContent) el.textContent = nome;
+
+  const btn = document.getElementById('btnGirar');
+  if (btn) btn.addEventListener('click', girarRoleta);
 });
 
-// ====== CONFIGURAÇÃO DA ROLETA ======
-// ATENÇÃO: defina quantos setores tem a imagem PREMIOS.png
-const SETORES = 12;                       // nº de fatias do disco
+// ===== CONFIG DA ROLETA =====
+// Nº de fatias da arte PREMIOS.png
+const SETORES = 12;
 const setorDeg = 360 / SETORES;
 
-// Ajuste fino para alinhar o ponteiro ao centro da primeira fatia.
-// Use valores entre -15 e +15 até bater certinho.
-// (0º significa que o centro da fatia 0 está exatamente às 12h)
+// Ajuste fino para alinhar ao ponteiro (0 = centro da fatia às 12h)
 const offsetDeg = 0;
 
-// Mapeie os rótulos na ordem HORÁRIA começando da posição das 12h (ponteiro)
-const premios = [
+// Ordem HORÁRIA a partir do topo (12h, onde o ponteiro aponta)
+const SETORES_LABELS = [
   "DONUT",
-  "NÃO FOI DESSA VEZ",
   "MOLHO YAKISSOBA",
-  "QUASE... TENTE OUTRA VEZ",
   "SHOYU",
-  "GIRA DE NOVO",
-  "TENTE OUTRA VEZ",
-  "RESPIRA... E GIRA DE NOVO",
-  "QUEM SABE NA PRÓXIMA",
   "MARCA PAGINA",
-  "PRÊMIO SURPRESA",
-  "VALE-DESCONTO"
+  "TENTE OUTRA VEZ",
+  "NÃO FOI DESSA VEZ",
+  "NÃO FOI DESSA VEZ… MAS O PRÓXIMO É SEU",
+  "QUASE! TENTA MAIS UMA VEZ",
+  "RESPIRA… E GIRA DE NOVO!",
+  "TENTE OUTRA VEZ",
+  "NÃO FOI DESSA VEZ",
+  "QUASE! TENTA MAIS UMA VEZ"
 ];
 
-// ====== LÓGICA DE GIRO ======
-const roletaEl = document.getElementById('roleta');
-const btnGirar = document.getElementById('btnGirar');
-const saida = document.getElementById('resultado');
+// Prêmios limitados (estoque)
+const LIMITADOS = {
+  "DONUT": 10,
+  "MOLHO YAKISSOBA": 10,
+  "SHOYU": 10,
+  "MARCA PAGINA": 10
+};
 
-let girando = false;
-let giroAcumulado = 0; // mantém rotação acumulada p/ giros sucessivos
+// ===== PERSISTÊNCIA =====
+const ESTOQUE_KEY = "estoque_roleta_v1";
+const JOGADAS_KEY = "jogadas_roleta_v1"; // array de jogadas (para ranking)
 
-function girarRoleta(){
-  if(girando) return;
-  girando = true;
-  saida.textContent = '';
+// carrega/salva estoque
+function carregarEstoque(){
+  try{
+    const raw = localStorage.getItem(ESTOQUE_KEY);
+    if (raw){
+      const obj = JSON.parse(raw);
+      for(const k of Object.keys(LIMITADOS)){
+        if (typeof obj[k] !== 'number' || obj[k] < 0) obj[k] = LIMITADOS[k];
+      }
+      localStorage.setItem(ESTOQUE_KEY, JSON.stringify(obj));
+      return obj;
+    }
+  }catch{}
+  localStorage.setItem(ESTOQUE_KEY, JSON.stringify({...LIMITADOS}));
+  return {...LIMITADOS};
+}
+let ESTOQUE = carregarEstoque();
 
-  // 4 a 6 voltas completas + ângulo aleatório dentro de 360°
-  const voltas = 4 + Math.floor(Math.random()*3);          // 4..6 voltas
-  const alvoDentro360 = Math.random() * 360;               // 0..360
-  const anguloFinal = voltas*360 + alvoDentro360;
-
-  giroAcumulado += anguloFinal;
-  roletaEl.style.transform = `rotate(${giroAcumulado}deg)`;
-  btnGirar.setAttribute('disabled','');
-
-  const duracaoMs = 4000; // igual ao CSS transition
-  setTimeout(() => {
-    const absoluto = giroAcumulado % 360;
-
-    // ângulo no referencial do ponteiro (12h), invertendo o sentido do giro visual
-    // e aplicando o offset de calibração
-    const relativoPonteiro = (360 - absoluto + offsetDeg + 360) % 360;
-
-    const indice = Math.floor(relativoPonteiro / setorDeg) % SETORES;
-    const premio = premios[indice] ?? "—";
-
-    saida.textContent = `🎉 Você ganhou: ${premio}`;
-    btnGirar.removeAttribute('disabled');
-    girando = false;
-
-    // vibração leve (se disponível)
-    if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
-  }, duracaoMs);
+function salvarJogada(reg){
+  const arr = carregarJogadas();
+  arr.push(reg);
+  localStorage.setItem(JOGADAS_KEY, JSON.stringify(arr));
+}
+function carregarJogadas(){
+  try{
+    const raw = localStorage.getItem(JOGADAS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch{ return [] }
 }
 
-btnGirar?.addEventListener('click', girarRoleta);
+// ===== UTIL =====
+function ehLimitado(lbl){ return Object.prototype.hasOwnProperty.call(LIMITADOS, lbl); }
+function estoqueDisponivel(lbl){ return ehLimitado(lbl) ? (ESTOQUE[lbl]||0) > 0 : true; }
+function debitar(lbl){
+  if (ehLimitado(lbl)){
+    ESTOQUE[lbl] = Math.max(0, (ESTOQUE[lbl]||0) - 1);
+    localStorage.setItem(ESTOQUE_KEY, JSON.stringify(ESTOQUE));
+  }
+}
+
+// escolher um setor válido respeitando estoque
+function escolherIndice(){
+  const disponiveis = [];
+  for (let i=0;i<SETORES;i++){
+    if (estoqueDisponivel(SETORES_LABELS[i])) disponiveis.push(i);
+  }
+  if (!disponiveis.length){
+    // se tudo acabou, cair em mensagem
+    return SETORES_LABELS.findIndex(v => !ehLimitado(v)) || 0;
+  }
+  const pick = Math.floor(Math.random() * disponiveis.length);
+  return disponiveis[pick];
+}
+
+// calcular rotação p/ pousar no centro da fatia desejada
+let giroAcumulado = 0;
+const roletaEl = document.getElementById('roleta');
+const saida = document.getElementById('resultado');
+let girando = false;
+
+function deltaParaSetor(idx){
+  const atual = ((giroAcumulado % 360) + 360) % 360;
+  const half = setorDeg / 2;
+  const alvoRel = (idx*setorDeg + half) % 360;                 // alvo relativo ao ponteiro
+  const absolutoFinal = (360 - alvoRel + offsetDeg + 360) % 360;
+  const deltaDentro360 = (absolutoFinal - atual + 360) % 360;
+  const voltas = 4 + Math.floor(Math.random()*3);              // 4..6 voltas
+  return voltas*360 + deltaDentro360;
+}
+
+function girarRoleta(){
+  if (girando || !roletaEl) return;
+  girando = true;
+  if (saida) saida.textContent = '';
+
+  const idx = escolherIndice();
+  const delta = deltaParaSetor(idx);
+
+  giroAcumulado += delta;
+  roletaEl.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
+  roletaEl.style.transform = `rotate(${giroAcumulado}deg)`;
+
+  setTimeout(() => {
+    const label = SETORES_LABELS[idx];
+    debitar(label);
+
+    const nome = localStorage.getItem('nome') || 'Participante';
+    const fone = localStorage.getItem('fone') || '';
+    const login_ts = Number(localStorage.getItem('login_ts')) || Date.now();
+
+    // registra a jogada (para ranking de primeiros)
+    salvarJogada({
+      nome, fone, premio: label, ts: login_ts
+    });
+
+    if (ehLimitado(label)){
+      const rest = ESTOQUE[label];
+      saida.textContent = `🎉 Você ganhou: ${label} — restantes: ${rest}`;
+    }else{
+      saida.textContent = `🌀 ${label}`;
+    }
+
+    if (navigator.vibrate) navigator.vibrate([20,30,20]);
+    girando = false;
+  }, 4000);
+}
