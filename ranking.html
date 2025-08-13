@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ranking – 5 primeiros</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:#ffb600;
+      background: url('FUNDO.png') center/cover no-repeat fixed;
+      display:grid; place-items:center; text-align:center;
+    }
+    .box{
+      width:min(720px, 94vw);
+      background: rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:20px; padding:22px; backdrop-filter: blur(4px);
+      box-shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+    h1{ margin:0 0 12px; font-size:clamp(22px, 3vw, 28px) }
+    table{ width:100%; border-collapse:collapse; color:#fff; font-size:16px }
+    th, td{ padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.15) }
+    th{ color:#ffd87a; text-transform:uppercase; font-size:13px; letter-spacing:.06em }
+    .actions{ margin-top:16px; display:flex; gap:10px; justify-content:center }
+    button{
+      padding:12px 20px; border:0; border-radius:999px; cursor:pointer;
+      background:orange; color:#fff; font-size:15px;
+      box-shadow:0 6px 18px rgba(0,0,0,.35);
+    }
+    .sec{ background:#444 }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Ranking – 5 primeiros jogadores</h1>
+    <table id="tbl">
+      <thead>
+        <tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="actions">
+      <button onclick="window.location.href='index.html'">Voltar ao início</button>
+      <button class="sec" onclick="limpar()">Limpar ranking (local)</button>
+    </div>
+  </div>
+
+  <script>
+    const JOGADAS_KEY = 'jogadas_roleta_v1';
+
+    function mascararFone(f){
+      // simples máscara: mantém só últimos 4
+      const d = (f||'').replace(/\D+/g,'');
+      if (d.length < 4) return f || '';
+      return '••• ' + d.slice(-4);
+    }
+
+    function carregarJogadas(){
+      try{
+        const raw = localStorage.getItem(JOGADAS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch{ return [] }
+    }
+
+    function montarRanking(){
+      const jogadas = carregarJogadas();
+
+      // mapeia os primeiros 5 jogadores distintos por telefone (ordem de chegada)
+      const vistos = new Set();
+      const primeiros = [];
+      for(const j of jogadas){
+        if(!vistos.has(j.fone)){
+          vistos.add(j.fone);
+          primeiros.push(j);
+        }
+        if(primeiros.length >= 5) break;
+      }
+
+      const tbody = document.querySelector('#tbl tbody');
+      tbody.innerHTML = '';
+      primeiros.forEach((j, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${idx+1}</td>
+                        <td>${j.nome}</td>
+                        <td>${mascararFone(j.fone)}</td>
+                        <td>${j.premio || '—'}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      if (primeiros.length === 0){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="4" style="padding:18px;opacity:.9">Ainda não há jogadores registrados.</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function limpar(){
+      localStorage.removeItem(JOGADAS_KEY);
+      montarRanking();
+    }
+
+    montarRanking();
+  </script>
+</body>
+</html>
