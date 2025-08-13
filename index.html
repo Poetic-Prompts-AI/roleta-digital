@@ -4,64 +4,64 @@
   <meta charset="UTF-8" />
   <title>Roleta da Sorte — SPA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Pré-carrega imagens para reduzir flicker -->
-  <link rel="preload" href="FUNDO2.png" as="image">
+  <!-- Preload para evitar flicker -->
+  <link rel="preload" href="FUNDO.png" as="image">
   <link rel="preload" href="PREMIOS.png" as="image">
   <link rel="preload" href="MOLDURA.png" as="image">
   <style>
+    /* Paleta da identidade */
     :root{
-      --panel-bg: #f2d8c9;  /* fundo interno */
-      --accent:   #404a91;  /* títulos, textos, bordas */
-      --primary:  #ce2e3a;  /* botões, ação */
-      --success:  #1b8f5a;  /* feedback positivo */
+      --bg-card:#f2d8c9;   /* fundos internos e tabelas */
+      --accent:#404a91;    /* títulos / textos / bordas */
+      --primary:#ce2e3a;   /* botões / ponteiro */
+      --ok:#1b8f5a;        /* sucesso */
     }
     *{box-sizing:border-box}
     html,body{
       height:100%; margin:0;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color: var(--accent);
-      background: url('FUNDO2.png') center/cover no-repeat fixed;
+      color:var(--accent);
+      background: url('FUNDO.png') center/cover no-repeat fixed;
     }
+    .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
+
     /* Telas */
-    .app{min-height:100%; display:grid; place-items:center; padding:20px}
-    .screen{display:none; width:100%; max-width:820px}
+    .screen{display:none; width:100%; max-width:860px}
     .screen.active{display:block}
-    /* Cartão comum */
+
+    /* LOGIN (mantém a “caixa”) */
     .card{
-      background: var(--panel-bg);
+      background: var(--bg-card);
       border: 2px solid rgba(64,74,145,.25);
       border-radius: 20px;
       padding: 24px 22px 28px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
-      text-align: center;
       margin-inline:auto;
     }
-    h1,h2{margin:0 0 10px; color: var(--accent); text-shadow: 0 1px #ffffff66}
-    p.sub{margin:2px 0 18px; opacity:.9}
-    /* Form */
+    h1,h2{margin:0 0 10px; color:var(--accent)}
+    p.sub{margin:4px 0 18px; opacity:.9}
+
     form{display:grid; gap:12px; margin-top:6px}
-    input,button{
-      padding:14px 16px; font-size:16px; border-radius:12px; border:2px solid transparent;
-    }
-    input{
-      background:#fff; color:#222; border-color:#ffffffaa;
-      outline: none;
-    }
+    input,button{padding:14px 16px; font-size:16px; border-radius:12px; border:2px solid transparent}
+    input{background:#fff; color:#222; border-color:#ffffffaa; outline:none}
     input::placeholder{color:#777}
-    .row-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px}
-    .btn{
-      background: var(--primary); color:#fff; cursor:pointer; border:0;
-      box-shadow: 0 6px 18px rgba(0,0,0,.25); transition: transform .06s;
-    }
-    .btn:active{ transform: translateY(1px) }
-    .btn.sec{ background: #ffffff; color: var(--accent); border:2px solid var(--accent) }
-    /* Logo / fullscreen */
+
+    .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px}
+    .btn{background:var(--primary); color:#fff; border:0; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .btn.sec{background:#fff; color:var(--accent); border:2px solid var(--accent)}
+    .btn:active{transform:translateY(1px)}
+
+    /* LOGO = fullscreen */
     .logo{margin-top:18px; display:inline-grid; gap:8px; justify-items:center; cursor:pointer; user-select:none}
     .logo img{width:min(260px, 60vw); border-radius:14px; display:block}
     .hint{font-size:13px; opacity:.85}
-    /* Roleta */
-    .wrapper{display:flex; flex-direction:column; align-items:center; gap:12px}
-    .roleta-area{position:relative; width:min(520px, 86vw); aspect-ratio:1/1; margin: 8px auto 0}
+
+    /* ROLETA (SEM CAIXA) */
+    .hero{ /* container limpo da tela de jogo, sem card */
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+      padding: 6px;
+    }
+    .roleta-area{position:relative; width:min(540px, 90vw); aspect-ratio:1/1; margin:6px auto 2px}
     .roleta{
       position:absolute; inset:0;
       background: url('PREMIOS.png') center/contain no-repeat;
@@ -78,37 +78,38 @@
       width:0; height:0;
       border-left: 18px solid transparent;
       border-right: 18px solid transparent;
-      border-top: 36px solid var(--primary);   /* ponteiro com a cor da identidade */
+      border-top: 38px solid var(--primary); /* cor da marca */
       filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
       z-index:3;
     }
-    #resultado{
-      min-height:28px; margin-top:6px;
-      font-weight:700; color: var(--success); text-shadow: 0 1px #ffffff66;
-    }
-    /* Ranking */
-    table{width:100%; border-collapse:collapse; color:#222; background:#fff; border-radius:12px; overflow:hidden}
+    #resultado{min-height:28px; font-weight:700; color:var(--ok)}
+
+    /* RANKING */
+    .panel{background:var(--bg-card); border:2px solid rgba(64,74,145,.25); border-radius:20px; padding:18px}
+    table{width:100%; border-collapse:collapse; background:#fff; color:#222; border-radius:12px; overflow:hidden}
     th,td{padding:10px 8px; border-bottom:1px solid #e9e9f1}
-    th{background:#eef0ff; color: var(--accent); text-transform:uppercase; font-size:12px; letter-spacing:.06em}
+    th{background:#eef0ff; color:var(--accent); text-transform:uppercase; font-size:12px; letter-spacing:.06em}
     tr:last-child td{border-bottom:0}
     .mask{font-variant-numeric: tabular-nums}
-    /* Avisos pequenos */
-    .note{font-size:13px; opacity:.8; margin-top:8px}
   </style>
 </head>
 <body>
   <div id="app" class="app">
-    <!-- ======================= LOGIN ======================= -->
+
+    <!-- ========== LOGIN ========== -->
     <section id="screen-login" class="screen active">
       <div class="card" style="max-width:540px">
         <h1>Roleta da Sorte</h1>
         <p class="sub">Preencha para participar</p>
+
         <form onsubmit="return irParaJogo()">
           <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" required />
           <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" autocomplete="tel" required />
-          <button class="btn" type="submit">Participar</button>
+          <div class="row">
+            <button class="btn" type="submit">Participar</button>
+          </div>
         </form>
-        <!-- LOGO = FULLSCREEN DA APLICAÇÃO TODA -->
+
         <div class="logo" onclick="entrarFullscreen()">
           <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
           <span class="hint">Toque no logo para tela cheia</span>
@@ -116,33 +117,30 @@
       </div>
     </section>
 
-    <!-- ======================= JOGO ======================== -->
+    <!-- ========== ROLETA (SEM CAIXA) ========== -->
     <section id="screen-jogo" class="screen">
-      <div class="card">
-        <div class="wrapper">
-          <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
+      <div class="hero">
+        <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
 
-          <div class="roleta-area">
-            <div class="ponteiro" aria-hidden="true"></div>
-            <div id="roleta" class="roleta" role="img" aria-label="Roleta de prêmios"></div>
-            <div class="moldura" aria-hidden="true"></div>
-          </div>
-
-          <div class="row-actions">
-            <button id="btnGirar" class="btn">Girar Roleta</button>
-            <button class="btn sec" onclick="showScreen('ranking')">Ver Ranking</button>
-            <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
-          </div>
-
-          <div id="resultado" aria-live="polite"></div>
-          <p class="note">Prêmios limitados: Donut, Molho Yakisoba, Shoyu e Marca Página (10 unidades cada).</p>
+        <div class="roleta-area">
+          <div class="ponteiro" aria-hidden="true"></div>
+          <div id="roleta" class="roleta" role="img" aria-label="Roleta de prêmios"></div>
+          <div class="moldura" aria-hidden="true"></div>
         </div>
+
+        <div class="row">
+          <button id="btnGirar" class="btn">Girar Roleta</button>
+          <button class="btn sec" onclick="showScreen('ranking')">Ver Ranking</button>
+          <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
+        </div>
+
+        <div id="resultado" aria-live="polite"></div>
       </div>
     </section>
 
-    <!-- ======================= RANKING ===================== -->
+    <!-- ========== RANKING ========== -->
     <section id="screen-ranking" class="screen">
-      <div class="card">
+      <div class="panel">
         <h2>Ranking — 5 primeiros jogadores</h2>
         <table id="tbl">
           <thead>
@@ -150,16 +148,17 @@
           </thead>
           <tbody></tbody>
         </table>
-        <div class="row-actions">
+        <div class="row" style="margin-top:12px">
           <button class="btn" onclick="showScreen('login')">Voltar ao início</button>
           <button class="btn sec" onclick="limparRanking()">Limpar ranking (local)</button>
         </div>
       </div>
     </section>
+
   </div>
 
   <script>
-    /* ========= Navegação geral ========= */
+    /* ===== Navegação / Fullscreen ===== */
     function showScreen(name){
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById(`screen-${name}`).classList.add('active');
@@ -173,7 +172,7 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    /* ========= Login ========= */
+    /* ===== Login ===== */
     function irParaJogo(){
       const nome = document.getElementById('nome').value.trim();
       const fone = document.getElementById('fone').value.trim();
@@ -191,97 +190,37 @@
       if (el) el.textContent = nome;
     }
 
-    /* ========= Roleta com estoque ========= */
+    /* ===== Roleta (SEM LIMITADORES e SEM CAIXA) =====
+       Para garantir que o resultado nunca difere da imagem,
+       escolhemos o setor primeiro e então calculamos a rotação
+       para cair exatamente no centro desse setor. */
     const SETORES_LABELS = [
       "DONUT",
-      "MOLHO YAKISSOBA",
-      "SHOYU",
+      "QUEM SABE NA PROXIMA",
       "MARCA PAGINA",
+      "RESPIRA... E GIRA DE NOVO",
       "TENTE OUTRA VEZ",
-      "NÃO FOI DESSA VEZ",
-      "NÃO FOI DESSA VEZ… MAS O PRÓXIMO É SEU",
-      "QUASE! TENTA MAIS UMA VEZ",
-      "RESPIRA… E GIRA DE NOVO!",
+      "GIRA DE NOVO",
+      "SHOYU",
+      "QUASE... TENTE OUTRA VEZ",
+      "MOLHO YAKISSOBA",
+      "NAO FOI DESSA VEZ",
       "TENTE OUTRA VEZ",
-      "NÃO FOI DESSA VEZ",
-      "QUASE! TENTA MAIS UMA VEZ"
-    ];
+      "TENTE OUTRA VEZ"
+    ]; // Ordem horária a partir do topo (12h). Ajuste se sua arte mudar.
+
     const SETORES = SETORES_LABELS.length;
     const setorDeg = 360 / SETORES;
-    const offsetDeg = 0; // ajuste fino de alinhamento se necessário
+    const offsetDeg = 0; // ajuste fino (se precisar alinhar milimetricamente)
+    let giroAcumulado = 0, girando = false;
 
-    // Prêmios com estoque limitado
-    const LIMITADOS = {
-      "DONUT": 10,
-      "MOLHO YAKISSOBA": 10,
-      "SHOYU": 10,
-      "MARCA PAGINA": 10
-    };
-    const ESTOQUE_KEY = "estoque_roleta_v1";
-    const JOGADAS_KEY = "jogadas_roleta_v1";
-
-    function carregarEstoque(){
-      try{
-        const raw = localStorage.getItem(ESTOQUE_KEY);
-        if (raw){
-          const obj = JSON.parse(raw);
-          for(const k of Object.keys(LIMITADOS)){
-            if (typeof obj[k] !== 'number' || obj[k] < 0) obj[k] = LIMITADOS[k];
-          }
-          localStorage.setItem(ESTOQUE_KEY, JSON.stringify(obj));
-          return obj;
-        }
-      }catch{}
-      localStorage.setItem(ESTOQUE_KEY, JSON.stringify({...LIMITADOS}));
-      return {...LIMITADOS};
-    }
-    let ESTOQUE = carregarEstoque();
-
-    function ehLimitado(lbl){ return Object.prototype.hasOwnProperty.call(LIMITADOS, lbl); }
-    function estoqueDisponivel(lbl){ return ehLimitado(lbl) ? (ESTOQUE[lbl]||0) > 0 : true; }
-    function debitar(lbl){
-      if (ehLimitado(lbl)){
-        ESTOQUE[lbl] = Math.max(0, (ESTOQUE[lbl]||0) - 1);
-        localStorage.setItem(ESTOQUE_KEY, JSON.stringify(ESTOQUE));
-      }
-    }
-
-    // Ranking (armazenamos cada jogada)
-    function carregarJogadas(){
-      try{
-        const raw = localStorage.getItem(JOGADAS_KEY);
-        return raw ? JSON.parse(raw) : [];
-      }catch{ return [] }
-    }
-    function salvarJogada(reg){
-      const arr = carregarJogadas();
-      arr.push(reg);
-      localStorage.setItem(JOGADAS_KEY, JSON.stringify(arr));
-    }
-
-    // Escolha de setor respeitando estoque
-    function escolherIndice(){
-      const disp = [];
-      for (let i=0;i<SETORES;i++){
-        if (estoqueDisponivel(SETORES_LABELS[i])) disp.push(i);
-      }
-      if (!disp.length){
-        // Se acabou tudo, cai em uma mensagem
-        return SETORES_LABELS.findIndex(v => !ehLimitado(v)) || 0;
-      }
-      return disp[Math.floor(Math.random()*disp.length)];
-    }
-
-    // Giro calculado para pousar no centro do setor escolhido
-    let giroAcumulado = 0;
-    let girando = false;
     function deltaParaSetor(idx){
       const atual = ((giroAcumulado % 360) + 360) % 360;
       const half = setorDeg / 2;
-      const alvoRel = (idx*setorDeg + half) % 360;
+      const alvoRel = (idx*setorDeg + half) % 360;                // alvo relativo ao ponteiro (12h)
       const absolutoFinal = (360 - alvoRel + offsetDeg + 360) % 360;
       const deltaDentro360 = (absolutoFinal - atual + 360) % 360;
-      const voltas = 4 + Math.floor(Math.random()*3); // 4..6 voltas
+      const voltas = 4 + Math.floor(Math.random()*3);             // 4..6 voltas
       return voltas*360 + deltaDentro360;
     }
 
@@ -292,7 +231,8 @@
       girando = true;
       document.getElementById('resultado').textContent = '';
 
-      const idx = escolherIndice();
+      // escolhe o setor primeiro (garante consistência com a arte)
+      const idx = Math.floor(Math.random()*SETORES);
       const delta = deltaParaSetor(idx);
 
       giroAcumulado += delta;
@@ -301,28 +241,32 @@
 
       setTimeout(()=>{
         const label = SETORES_LABELS[idx];
-        debitar(label);
 
+        // salva jogada para o ranking (sem limitadores)
         const nome = localStorage.getItem('nome') || 'Participante';
         const fone = localStorage.getItem('fone') || '';
         const login_ts = Number(localStorage.getItem('login_ts')) || Date.now();
-        salvarJogada({ nome, fone, premio: label, ts: login_ts });
+        const arr = carregarJogadas();
+        arr.push({nome, fone, premio: label, ts: login_ts});
+        localStorage.setItem('jogadas_roleta_v1', JSON.stringify(arr));
 
-        document.getElementById('resultado').textContent =
-          (ehLimitado(label)) ? `🎉 Você ganhou: ${label} — restantes: ${ESTOQUE[label]}`
-                              : `🌀 ${label}`;
-
+        document.getElementById('resultado').textContent = `🎉 Resultado: ${label}`;
         if (navigator.vibrate) navigator.vibrate([20,30,20]);
         girando = false;
       }, 4000);
     }
-
     document.addEventListener('DOMContentLoaded', ()=>{
       const btn = document.getElementById('btnGirar');
       if (btn) btn.addEventListener('click', girarRoleta);
     });
 
-    /* ========= Ranking (5 primeiros por telefone) ========= */
+    /* ===== Ranking (5 primeiros por telefone) ===== */
+    function carregarJogadas(){
+      try{
+        const raw = localStorage.getItem('jogadas_roleta_v1');
+        return raw ? JSON.parse(raw) : [];
+      }catch{ return [] }
+    }
     function mascararFone(f){
       const d = (f||'').replace(/\D+/g,'');
       if (d.length < 4) return f || '';
@@ -349,15 +293,12 @@
       }
       primeiros.forEach((j, idx) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${idx+1}</td>
-                        <td>${j.nome}</td>
-                        <td class="mask">${mascararFone(j.fone)}</td>
-                        <td>${j.premio || '—'}</td>`;
+        tr.innerHTML = `<td>${idx+1}</td><td>${j.nome}</td><td class="mask">${mascararFone(j.fone)}</td><td>${j.premio || '—'}</td>`;
         tbody.appendChild(tr);
       });
     }
     function limparRanking(){
-      localStorage.removeItem(JOGADAS_KEY);
+      localStorage.removeItem('jogadas_roleta_v1');
       montarRanking();
     }
   </script>
