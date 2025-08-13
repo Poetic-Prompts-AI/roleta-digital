@@ -4,7 +4,7 @@
   min-height:100vh;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:#fff;
-  background: url('FUNDO.png') center/cover no-repeat fixed;
+  background: url('FUNDO2png') center/cover no-repeat fixed;
   display:grid; place-items:center;
   text-align:center;
 }
@@ -74,4 +74,5 @@ button[disabled]{ opacity:.6; cursor:not-allowed }
   color:#00ff99;
   text-shadow:1px 1px #000;
 }
+
 
