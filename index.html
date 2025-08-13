@@ -13,6 +13,8 @@
     html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--accent);background:url('FUNDO2.png') center/cover no-repeat fixed}
     .app{min-height:100%;display:grid;place-items:center;padding:20px;text-align:center}
     .screen{display:none;width:100%;max-width:860px}.screen.active{display:block}
+
+    /* Login */
     .card{background:var(--bg-card);border:2px solid rgba(64,74,145,.25);border-radius:20px;padding:24px 22px 28px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     h1,h2{margin:0 0 10px}
     form{display:grid;gap:12px;margin-top:6px}
@@ -23,12 +25,16 @@
     .btn.sec{background:#fff;color:var(--accent);border:2px solid var(--accent)}
     .logo{margin-top:18px;display:inline-grid;gap:8px;justify-items:center;cursor:pointer}
     .logo img{width:min(260px,60vw);border-radius:14px}
+
+    /* Roleta (sem caixa) */
     .hero{display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px}
     .roleta-area{position:relative;width:min(540px,90vw);aspect-ratio:1/1;margin:6px auto 2px}
     .roleta{position:absolute;inset:0;background:url('PREMIOS.png') center/contain no-repeat;border-radius:50%;transition:transform 4s cubic-bezier(.18,.72,.14,1)}
     .moldura{position:absolute;inset:0;background:url('MOLDURA.png') center/contain no-repeat;pointer-events:none}
     .ponteiro{position:absolute;left:50%;top:-16px;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:38px solid var(--primary);filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));z-index:3}
     #resultado{min-height:28px;font-weight:700;color:var(--ok)}
+
+    /* Ranking */
     .panel{background:var(--bg-card);border:2px solid rgba(64,74,145,.25);border-radius:20px;padding:18px}
     table{width:100%;border-collapse:collapse;background:#fff;color:#222;border-radius:12px;overflow:hidden}
     th,td{padding:10px 8px;border-bottom:1px solid #e9e9f1}
@@ -56,7 +62,7 @@
       </div>
     </section>
 
-    <!-- ROLETA (sem caixa) -->
+    <!-- ROLETA -->
     <section id="screen-jogo" class="screen">
       <div class="hero">
         <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
@@ -80,7 +86,8 @@
         <h2>Ranking — 5 primeiros jogadores</h2>
         <table id="tbl">
           <thead><tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr></thead>
-        <tbody></tbody></table>
+          <tbody></tbody>
+        </table>
         <div class="row" style="margin-top:12px">
           <button class="btn" onclick="showScreen('login')">Voltar ao início</button>
           <button class="btn sec" onclick="limparRanking()">Limpar ranking (local)</button>
@@ -98,9 +105,9 @@
     function preencherNome(){document.getElementById('nomeUsuario').textContent=localStorage.getItem('nome')||'Participante'}
     const nomeEl=()=>document.getElementById('nome');const foneEl=()=>document.getElementById('fone');
 
-    /* === ROLETA — leitura pelo ângulo final (mesmo sentido do CSS) ===
-       Ordem confirmada no PNG enviado (sentido HORÁRIO a partir do topo 12h): */
-    const SECTORS=[
+    /* === ROLETA — alinhamento garantido ao centro da fatia ===
+       Ordem HORÁRIA a partir do topo (12h), igual ao seu PNG: */
+    const LABELS=[
       "DONUT",
       "QUEM SABE NA PROXIMA",
       "MARCA PAGINA",
@@ -114,37 +121,50 @@
       "TENTE OUTRA VEZ",
       "TENTE OUTRA VEZ"
     ];
-    const N=SECTORS.length, STEP=360/N;
+    const N=LABELS.length, STEP=360/N;
 
-    /* Se o seu PNG estiver “uma fatia” adiantado/atrasado, ajuste: -1, 0 ou +1. */
-    const PHASE_SECTORS=-1;                 // 0 funciona para o PNG com DONUT no topo
-    const PHASE_DEG=PHASE_SECTORS*STEP;
+    /* Se o PNG estiver levemente “adiantado/atrasado”, ajuste aqui em FATIAS: -1, 0 ou +1 */
+    const PHASE_SECTORS=0;
+    const PHASE=PHASE_SECTORS*STEP;
 
     let total=0, spinning=false;
 
-    // Dado o ângulo absoluto (horário) onde parou, retorna o índice da fatia
-    function idxFromAngle(abs){
-      const rel=(abs + PHASE_DEG + 360)%360;
-      // usamos piso com meio-passo para cair sempre no centro correto
-      return Math.floor(((rel + STEP/2) % 360)/STEP)%N;
+    /* Converte ângulo absoluto (roda) -> índice.
+       IMPORTANTE: usamos (360 - ângulo) porque o ponteiro é fixo e a roda gira no sentido horário. */
+    function indexFromAngle(abs){
+      const rel=(360 - abs + PHASE + 360) % 360;
+      return Math.floor((rel + STEP/2) / STEP) % N;
     }
 
-    // Faz o giro: escolhe um ângulo final arbitrário e lê o setor do ângulo real
+    /* Calcula rotação para cair no CENTRO do índice escolhido */
+    function deltaToIndex(idx){
+      const now=((total%360)+360)%360;
+      const centerRel=(idx*STEP + STEP/2) % 360;         // centro da fatia relativo ao topo
+      const targetAbs=(360 - centerRel + PHASE + 360)%360; // onde a roda deve parar
+      const delta360=(targetAbs - now + 360)%360;
+      const turns=4 + Math.floor(Math.random()*3);       // 4..6 voltas
+      return turns*360 + delta360;
+    }
+
     function spin(){
       if(spinning)return;
       const w=document.getElementById('roleta'); if(!w)return;
       spinning=true; document.getElementById('resultado').textContent='';
 
-      const turns=4+Math.floor(Math.random()*3), extra=Math.random()*360;
-      const delta=turns*360 + extra; total+=delta;
+      // 1) escolhe a fatia
+      const chosen=Math.floor(Math.random()*N);
+      // 2) gira para o centro dela
+      const delta=deltaToIndex(chosen);
 
+      total+=delta;
       w.style.transition="transform 4s cubic-bezier(.18,.72,.14,1)";
       w.style.transform=`rotate(${total}deg)`;
 
       setTimeout(()=>{
+        // 3) lê do ângulo REAL e confere (deve bater com 'chosen')
         const abs=((total%360)+360)%360;
-        const idx=idxFromAngle(abs);
-        const label=SECTORS[idx];
+        const idx=indexFromAngle(abs);
+        const label=LABELS[idx];
         document.getElementById('resultado').textContent=`🎉 Resultado: ${label}`;
 
         // ranking
@@ -173,4 +193,5 @@
   </script>
 </body>
 </html>
+
 
