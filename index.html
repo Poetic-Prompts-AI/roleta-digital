@@ -117,7 +117,7 @@
     const N=SECTORS.length, STEP=360/N;
 
     /* Se o seu PNG estiver “uma fatia” adiantado/atrasado, ajuste: -1, 0 ou +1. */
-    const PHASE_SECTORS=0;                 // 0 funciona para o PNG com DONUT no topo
+    const PHASE_SECTORS=-1;                 // 0 funciona para o PNG com DONUT no topo
     const PHASE_DEG=PHASE_SECTORS*STEP;
 
     let total=0, spinning=false;
@@ -173,3 +173,4 @@
   </script>
 </body>
 </html>
+
