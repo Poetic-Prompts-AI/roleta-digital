@@ -2,189 +2,36 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Roleta Estilizada</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      background: #1a001f;
-      font-family: sans-serif;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .wrapper {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .tela-fullscreen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #ffb600;
-      text-shadow: 2px 2px #000;
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .roleta-wrapper {
-      position: relative;
-      width: 400px;
-      height: 400px;
-    }
-
-    .roleta-fundo {
-      width: 100%;
-      height: 100%;
-      background-image: url('FUNDO.png');
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center;
-      border-radius: 50%;
-      transition: transform 4s ease-out;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-
-    .moldura {
-      width: 100%;
-      height: 100%;
-      background-image: url('MOLDURA.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .ponteiro {
-      width: 0;
-      height: 0;
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-top: 40px solid #8000ff;
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%) rotate(-360deg);
-      z-index: 3;
-    }
-
-    button {
-      margin: 15px 0;
-      padding: 12px 30px;
-      font-size: 18px;
-      background-color: orange;
-      border: none;
-      color: white;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-
-    #resultado {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
-      color: #00ff88;
-      text-shadow: 1px 1px #000;
-    }
-  </style>
+  <title>Roleta – Sorteio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preload" href="PREMIOS.png" as="image">
+  <link rel="preload" href="MOLDURA.png" as="image">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-roleta">
 
-  <!-- Tela inicial para ativar o fullscreen -->
-  <div class="tela-fullscreen" id="telaFullscreen">
-    <h2>Para continuar, clique abaixo para aceitar os termos:</h2>
-    <button onclick="ativarTelaCheia()">ACEITAR</button>
-  </div>
+  <div class="wrapper">
+    <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
 
-  <!-- Roleta principal -->
-  <div class="wrapper" id="conteudoPrincipal">
-    <h2>Gire e Boa Sorte, <span id="nomeUsuario"></span>!</h2>
+    <div class="roleta-area">
+      <div class="ponteiro" aria-hidden="true"></div>
 
-    <div class="container">
-      <div class="roleta-wrapper">
-        <div class="ponteiro"></div>
-        <div class="roleta-fundo" id="roleta"></div>
-        <div class="moldura"></div>
-      </div>
+      <!-- DISCO da roleta (gira) -->
+      <div class="roleta" id="roleta" role="img" aria-label="Roleta de prêmios"></div>
 
-      <button onclick="girarRoleta()">Girar Roleta</button>
-      <button onclick="voltarParaCadastro()">Voltar para o início</button>
-
-      <div id="resultado"></div>
+      <!-- MOLDURA por cima (não gira) -->
+      <div class="moldura" aria-hidden="true"></div>
     </div>
+
+    <div class="controls">
+      <button id="btnGirar">Girar Roleta</button>
+      <button class="sec" onclick="window.location.href='index.html'">Voltar</button>
+    </div>
+
+    <div id="resultado" aria-live="polite"></div>
   </div>
 
-  <script>
-    const nome = localStorage.getItem("nome") || "Participante";
-    document.getElementById("nomeUsuario").textContent = nome;
-
-    const premios = [
-      "Desconto Playerum – 20%",
-      "Cupom T.T. Burger",
-      "Produtos Tom Ticken",
-      "Incrivelmente Não Dessa Vez 😢",
-      "Produtos T.T.",
-      "Nutriland Premium",
-      "Produtos Marola"
-    ];
-
-    function ativarTelaCheia() {
-      const elem = document.documentElement;
-
-      if (elem.requestFullscreen) elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-      else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-
-      // Agora mostra a roleta
-      document.getElementById("telaFullscreen").style.display = "none";
-      document.getElementById("conteudoPrincipal").style.display = "flex";
-    }
-
-    function girarRoleta() {
-      const roleta = document.getElementById("roleta");
-      const anguloFinal = Math.floor(Math.random() * 360 + 1440);
-      roleta.style.transform = `rotate(${anguloFinal}deg)`;
-
-      const setor = ((anguloFinal % 360) + 360) % 360;
-      const index = Math.floor((360 - setor + 25.7) % 360 / 51.42);
-
-      setTimeout(() => {
-        document.getElementById("resultado").textContent = `🎁 Você ganhou: ${premios[index]}`;
-      }, 4000);
-    }
-
-    function voltarParaCadastro() {
-      window.location.href = "index.html";
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
+
