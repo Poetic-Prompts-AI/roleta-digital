@@ -9,10 +9,10 @@
   <link rel="preload" href="MOLDURA.png" as="image">
   <style>
     :root{
-      --bg-card:#f2d8c9;   /* fundos internos e tabelas */
-      --accent:#404a91;    /* títulos / textos / bordas */
-      --primary:#ce2e3a;   /* botões / ponteiro */
-      --ok:#1b8f5a;        /* sucesso */
+      --bg-card:#f2d8c9;   /* fundo interno */
+      --accent:#404a91;    /* títulos/textos */
+      --primary:#ce2e3a;   /* botões/ponteiro */
+      --ok:#1b8f5a;
     }
     *{box-sizing:border-box}
     html,body{
@@ -22,6 +22,7 @@
       background: url('FUNDO2.png') center/cover no-repeat fixed;
     }
     .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
+
     .screen{display:none; width:100%; max-width:860px}
     .screen.active{display:block}
 
@@ -44,6 +45,7 @@
     .btn{background:var(--primary); color:#fff; border:0; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.25)}
     .btn.sec{background:#fff; color:var(--accent); border:2px solid var(--accent)}
     .btn:active{transform:translateY(1px)}
+
     .logo{margin-top:18px; display:inline-grid; gap:8px; justify-items:center; cursor:pointer; user-select:none}
     .logo img{width:min(260px, 60vw); border-radius:14px; display:block}
     .hint{font-size:13px; opacity:.85}
@@ -84,16 +86,21 @@
 </head>
 <body>
   <div id="app" class="app">
-    <!-- LOGIN -->
+
+    <!-- ========== LOGIN ========== -->
     <section id="screen-login" class="screen active">
       <div class="card" style="max-width:540px">
         <h1>Roleta da Sorte</h1>
         <p class="sub">Preencha para participar</p>
+
         <form onsubmit="return irParaJogo()">
           <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" required />
           <input id="fone" type="tel" inputmode="tel" placeholder="Seu telefone" autocomplete="tel" required />
-          <div class="row"><button class="btn" type="submit">Participar</button></div>
+          <div class="row">
+            <button class="btn" type="submit">Participar</button>
+          </div>
         </form>
+
         <div class="logo" onclick="entrarFullscreen()">
           <img src="LOGOLAB.png" alt="Entrar em tela cheia (LAB)">
           <span class="hint">Toque no logo para tela cheia</span>
@@ -101,30 +108,35 @@
       </div>
     </section>
 
-    <!-- ROLETA -->
+    <!-- ========== ROLETA (SEM CAIXA) ========== -->
     <section id="screen-jogo" class="screen">
       <div class="hero">
         <h2>Boa sorte, <span id="nomeUsuario">Participante</span>!</h2>
+
         <div class="roleta-area">
           <div class="ponteiro" aria-hidden="true"></div>
           <div id="roleta" class="roleta" role="img" aria-label="Roleta de prêmios"></div>
           <div class="moldura" aria-hidden="true"></div>
         </div>
+
         <div class="row">
           <button id="btnGirar" class="btn">Girar Roleta</button>
           <button class="btn sec" onclick="showScreen('ranking')">Ver Ranking</button>
           <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
         </div>
+
         <div id="resultado" aria-live="polite"></div>
       </div>
     </section>
 
-    <!-- RANKING -->
+    <!-- ========== RANKING ========== -->
     <section id="screen-ranking" class="screen">
       <div class="panel">
         <h2>Ranking — 5 primeiros jogadores</h2>
         <table id="tbl">
-          <thead><tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr></thead>
+          <thead>
+            <tr><th>#</th><th>Nome</th><th>Telefone</th><th>Prêmio da 1ª jogada</th></tr>
+          </thead>
           <tbody></tbody>
         </table>
         <div class="row" style="margin-top:12px">
@@ -133,10 +145,11 @@
         </div>
       </div>
     </section>
+
   </div>
 
   <script>
-    /* Navegação / Fullscreen */
+    /* ========= Navegação / Fullscreen ========= */
     function showScreen(name){
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById(`screen-${name}`).classList.add('active');
@@ -150,7 +163,7 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    /* Login */
+    /* ========= Login ========= */
     function irParaJogo(){
       const nome = document.getElementById('nome').value.trim();
       const fone = document.getElementById('fone').value.trim();
@@ -168,95 +181,110 @@
       if (el) el.textContent = nome;
     }
 
-    /* ===== ROLETA (sem limitadores) =====
-       CORREÇÃO: deslocamento fixo de **1 fatia** (phase) para bater com o PNG.
-       Isso garante que o setor escolhido é o mesmo visto pelo ponteiro. */
-    const SETORES_LABELS = [
+    /* ========= ROLETA (SEM LIMITADORES) =========
+       REGRA: o texto exibido é calculado a partir do ÂNGULO REAL onde a roleta parou,
+       com fase ajustada para a arte atual (corrige o “1 setor de diferença” que você viu).
+    */
+
+    /* Ordem HORÁRIA começando do TOPO (12h),
+       conferindo com a arte que você mostrou (SHOYU no topo). */
+    const SECTORS = [
+      "SHOYU",
+      "QUASE... TENTE OUTRA VEZ",
+      "MOLHO YAKISSOBA",
+      "NAO FOI DESSA VEZ",
       "DONUT",
       "QUEM SABE NA PROXIMA",
       "MARCA PAGINA",
       "RESPIRA... E GIRA DE NOVO",
       "TENTE OUTRA VEZ",
       "GIRA DE NOVO",
-      "SHOYU",
-      "QUASE... TENTE OUTRA VEZ",
-      "MOLHO YAKISSOBA",
-      "NAO FOI DESSA VEZ",
       "TENTE OUTRA VEZ",
       "TENTE OUTRA VEZ"
-    ]; // ordem horária a partir das 12h (conforme arte)
+    ];
 
-    const N = SETORES_LABELS.length;
-    const setorDeg = 360 / N;
-    const phaseSectors = 1;                 // <<< ajuste: 1 fatia de deslocamento
-    const offsetBase = phaseSectors * setorDeg; // = +30°
-    let giro = 0, girando = false;
+    const N = SECTORS.length;
+    const DEGS = 360 / N;
 
-    function deltaParaSetor(idx){
-      const atual = ((giro % 360) + 360) % 360;
-      const half = setorDeg / 2;
-      const alvoRel = ((idx * setorDeg + half) % 360);
-      const absolutoFinal = (360 - alvoRel + offsetBase + 360) % 360;
-      const deltaDentro360 = (absolutoFinal - atual + 360) % 360;
-      const voltas = 4 + Math.floor(Math.random()*3);
-      return { delta: voltas*360 + deltaDentro360, alvoAbs: absolutoFinal };
+    /* Fase corrigida: -1 setor (o que estava saindo 1 à frente).
+       Se ainda notar 1 à direita/esquerda, mude para +1. */
+    const PHASE_SECTORS = -1;                 // <<< correção
+    const PHASE_DEG = PHASE_SECTORS * DEGS;
+
+    let totalDeg = 0;
+    let spinning = false;
+
+    function sectorIndexFromAngle(absDeg){
+      // ângulo “visto” pelo ponteiro (12h), com a fase aplicada
+      const rel = (360 - absDeg + PHASE_DEG + 360) % 360;
+      // centraliza (evita bordas)
+      const idx = Math.floor(((rel + DEGS/2) % 360) / DEGS);
+      return idx % N;
     }
 
-    function girarRoleta(){
-      if (girando) return;
-      const roleta = document.getElementById('roleta'); if (!roleta) return;
-      girando = true; document.getElementById('resultado').textContent = '';
+    function spin(){
+      if (spinning) return;
+      const wheel = document.getElementById('roleta'); if(!wheel) return;
+      spinning = true;
+      document.getElementById('resultado').textContent = '';
 
-      // escolhe setor primeiro
-      const idx = Math.floor(Math.random()*N);
-      const { delta } = deltaParaSetor(idx);
+      // giro aleatório (4–6 voltas + qualquer ângulo)
+      const turns = 4 + Math.floor(Math.random()*3);
+      const extra = Math.random()*360;
+      const delta = turns*360 + extra;
 
-      giro += delta;
-      roleta.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
-      roleta.style.transform = `rotate(${giro}deg)`;
+      totalDeg += delta;
+      wheel.style.transition = "transform 4s cubic-bezier(.18,.72,.14,1)";
+      wheel.style.transform = `rotate(${totalDeg}deg)`;
 
       setTimeout(()=>{
-        const label = SETORES_LABELS[idx];               // mostra exatamente o escolhido
+        const abs = ((totalDeg % 360) + 360) % 360;
+        const idx = sectorIndexFromAngle(abs);
+        const label = SECTORS[idx];
+
         document.getElementById('resultado').textContent = `🎉 Resultado: ${label}`;
 
-        // registra para ranking
+        // ranking
         const nome = localStorage.getItem('nome') || 'Participante';
         const fone = localStorage.getItem('fone') || '';
         const ts = Number(localStorage.getItem('login_ts')) || Date.now();
-        const arr = carregarJogadas(); arr.push({nome, fone, premio: label, ts});
+        const arr = loadPlays(); arr.push({nome, fone, premio: label, ts});
         localStorage.setItem('jogadas_roleta_v1', JSON.stringify(arr));
 
         if (navigator.vibrate) navigator.vibrate([20,30,20]);
-        girando = false;
+        spinning = false;
       }, 4000);
     }
     document.addEventListener('DOMContentLoaded', ()=>{
-      const btn = document.getElementById('btnGirar');
-      if (btn) btn.addEventListener('click', girarRoleta);
+      document.getElementById('btnGirar')?.addEventListener('click', spin);
     });
 
-    /* Ranking (5 primeiros por telefone) */
-    function carregarJogadas(){
+    /* ========= Ranking ========= */
+    function loadPlays(){
       try{ const raw = localStorage.getItem('jogadas_roleta_v1'); return raw ? JSON.parse(raw) : []; }
       catch{ return []; }
     }
-    function mascararFone(f){
+    function maskPhone(f){
       const d = (f||'').replace(/\D+/g,''); return d.length < 4 ? (f||'') : '••• ' + d.slice(-4);
     }
-    function montarRanking(){
-      const jogadas = carregarJogadas();
-      const vistos = new Set(), primeiros = [];
-      for(const j of jogadas){ if(!vistos.has(j.fone)){ vistos.add(j.fone); primeiros.push(j); } if(primeiros.length>=5) break; }
-      const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML = '';
-      if (!primeiros.length){
-        const tr = document.createElement('tr'); tr.innerHTML = `<td colspan="4" style="padding:18px;opacity:.75;color:#666">Ainda não há jogadores registrados.</td>`;
+    function buildRanking(){
+      const plays = loadPlays();
+      const seen = new Set(), firsts = [];
+      for(const p of plays){ if(!seen.has(p.fone)){ seen.add(p.fone); firsts.push(p); } if(firsts.length>=5) break; }
+      const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML='';
+      if(!firsts.length){
+        const tr=document.createElement('tr'); tr.innerHTML=`<td colspan="4" style="padding:18px;opacity:.75;color:#666">Ainda não há jogadores registrados.</td>`;
         tbody.appendChild(tr); return;
       }
-      primeiros.forEach((j,i)=>{ const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${i+1}</td><td>${j.nome}</td><td class="mask">${mascararFone(j.fone)}</td><td>${j.premio||'—'}</td>`; tbody.appendChild(tr);
+      firsts.forEach((p,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${i+1}</td><td>${p.nome}</td><td class="mask">${maskPhone(p.fone)}</td><td>${p.premio||'—'}</td>`;
+        tbody.appendChild(tr);
       });
     }
-    function limparRanking(){ localStorage.removeItem('jogadas_roleta_v1'); montarRanking(); }
+    function limparRanking(){ localStorage.removeItem('jogadas_roleta_v1'); buildRanking(); }
+
+    function montarRanking(){ buildRanking(); } // compat
   </script>
 </body>
 </html>
