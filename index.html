@@ -195,7 +195,7 @@
     ];
 
     const N=LABELS.length, STEP=360/N;
-    const PHASE_SECTORS= 0; /* se o PNG estiver 1 fatia deslocado, mude para -1 ou +1 */
+    const PHASE_SECTORS= -1; /* se o PNG estiver 1 fatia deslocado, mude para -1 ou +1 */
     const PHASE=PHASE_SECTORS*STEP;
 
     let total=0, spinning=false;
@@ -235,6 +235,7 @@
   </script>
 </body>
 </html>
+
 
 
 
