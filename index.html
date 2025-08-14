@@ -28,7 +28,7 @@
       --font-ui:'AnjaEliane',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 
       /* Escala de elementos do jogo (roleta) */
-      --game-scale: 1.2; /* +20% em todos os elementos gráficos da tela do jogo */
+      --game-scale: 1.2;
     }
 
     *{box-sizing:border-box}
@@ -56,32 +56,19 @@
 
     /* Roleta */
     .hero{display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px}
-
-    /* >>> AUMENTO DE 20% EM TODOS OS ELEMENTOS DA TELA DO JOGO (gráfico) */
-    #screen-jogo .hero{
-      transform: scale(var(--game-scale));
-      transform-origin: top center;
-      will-change: transform;
-    }
-
+    #screen-jogo .hero{ transform: scale(var(--game-scale)); transform-origin: top center; will-change: transform; }
     .roleta-area{position:relative; width:min(540px,90vw); aspect-ratio:1/1; margin:6px auto 2px}
     .roleta{position:absolute; inset:0; background:url('roletaP.png') center/contain no-repeat; border-radius:50%; transition:transform 4s cubic-bezier(.18,.72,.14,1)}
     .moldura{position:absolute; inset:0; background:url('MOLDURA.png') center/contain no-repeat; pointer-events:none}
     .ponteiro{position:absolute; left:50%; top:-16px; transform:translateX(-50%); width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent; border-top:38px solid var(--primary); filter:drop-shadow(0 4px 6px rgba(0,0,0,.35)); z-index:3}
     #resultado{min-height:28px; font-weight:700; color:var(--ok); font-family:var(--font-title)}
 
-    /* Ações na roleta */
     .acoes{display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:6px; width:100%}
     .acoes .btn{min-width:220px}
     .acoes .btn.sec{min-width:200px}
 
-    /* >>> AUMENTO DE FONTE (+20%) NAS DUAS TELAS
-       - Login: 100% → 120%
-       - Jogo:  (já estava 120%) → 144% agora
-       Também sobe a fonte de botões e inputs nessas telas (eram 16px fixos). */
     #screen-login{ font-size:120%; }
     #screen-login .btn, #screen-login input{ font-size:calc(16px * 1.2); }
-
     #screen-jogo{ font-size:144%; }
     #screen-jogo .btn{ font-size:calc(16px * 1.44); }
   </style>
@@ -120,6 +107,8 @@
         <div class="acoes">
           <button id="btnGirar" class="btn">Girar Roleta</button>
           <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
+          <!-- Novo botão -->
+          <button class="btn sec" onclick="salvarEDownloadJSON()">Salvar e Baixar (JSON)</button>
         </div>
 
         <div id="resultado" aria-live="polite"></div>
@@ -129,7 +118,6 @@
   </div>
 
   <script>
-    /* Navegação / Fullscreen */
     function showScreen(n){
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById(`screen-${n}`).classList.add('active');
@@ -153,20 +141,16 @@
       document.getElementById('nomeUsuario').textContent = localStorage.getItem('nome') || 'Participante';
     }
 
-    /* Configs de girada */
     const SPIN_DURATION=4000, SPIN_EASING='cubic-bezier(.18,.72,.14,1)', MIN_TURNS=4, MAX_TURNS=6;
-
-    /* 10 fatias (sentido horário a partir do topo) */
     const LABELS=["DONUT","QUEM SABE NA PROXIMA","MARCA PAGINA","AZAR NO JOGO SORTE NO AMOR","TENTE OUTRA VEZ","AHHH... QUE PENA","SHOYU","QUEM SABE NO JOGO DA MEMORIA","MOLHO YAKISSOBA","NAO FOI DESSA VEZ"];
     const N=LABELS.length, STEP=360/N;
     const PHASE_SECTORS=0, PHASE=PHASE_SECTORS*STEP;
-
     let total=0,spinning=false;
 
     function deltaToIndex(idx){
       const now=((total%360)+360)%360;
-      const centerRel=(idx*STEP)%360;                 // centros: 0,36,72...
-      const targetAbs=(360-centerRel+PHASE+360)%360;  // coloca o centro no ponteiro
+      const centerRel=(idx*STEP)%360;
+      const targetAbs=(360-centerRel+PHASE+360)%360;
       const delta360=(targetAbs-now+360)%360;
       const turns=MIN_TURNS+Math.floor(Math.random()*(MAX_TURNS-MIN_TURNS+1));
       return turns*360+delta360;
@@ -175,17 +159,13 @@
     function girar(){
       if(spinning)return;
       const wheel=document.getElementById('roleta'); if(!wheel)return;
-
       spinning=true;
       document.getElementById('resultado').textContent='';
-
       const idx=Math.floor(Math.random()*N);
       const delta=deltaToIndex(idx);
-
       total+=delta;
       wheel.style.transition=`transform ${SPIN_DURATION}ms ${SPIN_EASING}`;
       wheel.style.transform=`rotate(${total}deg)`;
-
       setTimeout(()=>{
         document.getElementById('resultado').textContent=`🎉 Resultado: ${LABELS[idx]}`;
         navigator.vibrate?.([20,30,20]);
@@ -196,13 +176,27 @@
     document.addEventListener('DOMContentLoaded',()=>{
       document.getElementById('btnGirar')?.addEventListener('click',girar);
     });
+
+    /* Função para salvar nome e telefone em JSON e baixar */
+    function salvarEDownloadJSON(){
+      const nome = localStorage.getItem('nome') || '';
+      const fone = localStorage.getItem('fone') || '';
+      if(!nome || !fone){
+        alert("Nenhum dado encontrado para salvar.");
+        return;
+      }
+      const dados = { nome: nome, telefone: fone };
+      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dados_roleta.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>
-
-
-
-
 
 
 
