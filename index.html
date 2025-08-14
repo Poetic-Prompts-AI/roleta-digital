@@ -15,39 +15,22 @@
 
   <style>
     /* ====== Fontes locais ====== */
-    @font-face{
-      font-family:'AnjaEliane';
-      src:url('Anja Eliane.ttf') format('truetype');
-      font-weight:400; font-style:normal; font-display:swap;
-    }
-    @font-face{
-      font-family:'AnjaEliane';
-      src:url('Anja Eliane accent002.ttf') format('truetype');
-      font-weight:700; font-style:normal; font-display:swap;
-    }
-    @font-face{
-      font-family:'SweetSnow';
-      src:url('Sweet Snow.otf') format('opentype');
-      font-weight:400; font-style:normal; font-display:swap;
-    }
+    @font-face{ font-family:'AnjaEliane'; src:url('Anja Eliane.ttf') format('truetype'); font-weight:400; font-style:normal; font-display:swap; }
+    @font-face{ font-family:'AnjaEliane'; src:url('Anja Eliane accent002.ttf') format('truetype'); font-weight:700; font-style:normal; font-display:swap; }
+    @font-face{ font-family:'SweetSnow'; src:url('Sweet Snow.otf') format('opentype'); font-weight:400; font-style:normal; font-display:swap; }
 
     :root{
-      /* Cores da identidade */
-      --bg-card:#f2d8c9;
-      --accent:#404a91;
-      --primary:#ce2e3a;
-      --ok:#1b8f5a;
-
-      /* Fontes da UI */
+      --bg-card:#f2d8c9; --accent:#404a91; --primary:#ce2e3a; --ok:#1b8f5a;
       --font-title:'SweetSnow','AnjaEliane',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       --font-ui:'AnjaEliane',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+
+      /* >>> escala de todos os elementos do jogo na tela da roleta */
+      --game-scale: 1.2; /* 1.0 = 100% | 1.2 = +20% */
     }
 
     *{box-sizing:border-box}
     html,body{
-      height:100%; margin:0;
-      font-family:var(--font-ui);
-      color:var(--accent);
+      height:100%; margin:0; font-family:var(--font-ui); color:var(--accent);
       background:url('FUNDO2.png') center/cover no-repeat fixed;
     }
     .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
@@ -57,23 +40,12 @@
     .screen.active{display:block}
 
     /* Login */
-    .card{
-      background:var(--bg-card);
-      border:2px solid rgba(64,74,145,.25);
-      border-radius:20px;
-      padding:24px 22px 28px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-      margin-inline:auto;
-    }
+    .card{background:var(--bg-card); border:2px solid rgba(64,74,145,.25); border-radius:20px; padding:24px 22px 28px; box-shadow:0 10px 30px rgba(0,0,0,.35); margin-inline:auto}
     h1,h2{margin:0 0 10px; font-family:var(--font-title)}
     form{display:grid; gap:12px; margin-top:6px}
     input,button{padding:14px 16px; font-size:16px; border-radius:12px; border:2px solid transparent}
     input{background:#fff; color:#222; border-color:#ffffffaa}
-    .btn{
-      background:var(--primary); color:#fff; border:0; cursor:pointer;
-      box-shadow:0 6px 18px rgba(0,0,0,.25);
-      font-family:var(--font-title);
-    }
+    .btn{background:var(--primary); color:#fff; border:0; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.25); font-family:var(--font-title)}
     .btn:active{transform:translateY(1px)}
     .btn.sec{background:#fff; color:var(--accent); border:2px solid var(--accent)}
     .logo{margin-top:18px; display:inline-grid; gap:8px; justify-items:center; cursor:pointer}
@@ -81,26 +53,18 @@
 
     /* Roleta */
     .hero{display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px}
+
+    /* >>> AUMENTO DE 20% NA TELA DA ROLETA */
+    #screen-jogo .hero{
+      transform: scale(var(--game-scale));
+      transform-origin: top center;   /* mantém centralizado enquanto cresce */
+      will-change: transform;
+    }
+
     .roleta-area{position:relative; width:min(540px,90vw); aspect-ratio:1/1; margin:6px auto 2px}
-    .roleta{
-      position:absolute; inset:0;
-      background:url('roletaP.png') center/contain no-repeat; /* <<< usa a nova imagem */
-      border-radius:50%;
-      transition:transform 4s cubic-bezier(.18,.72,.14,1); /* será sobrescrita pelo JS com as configs */
-    }
-    .moldura{
-      position:absolute; inset:0;
-      background:url('MOLDURA.png') center/contain no-repeat;
-      pointer-events:none;
-    }
-    .ponteiro{
-      position:absolute; left:50%; top:-16px; transform:translateX(-50%);
-      width:0; height:0;
-      border-left:18px solid transparent; border-right:18px solid transparent;
-      border-top:38px solid var(--primary);
-      filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));
-      z-index:3;
-    }
+    .roleta{position:absolute; inset:0; background:url('roletaP.png') center/contain no-repeat; border-radius:50%; transition:transform 4s cubic-bezier(.18,.72,.14,1)}
+    .moldura{position:absolute; inset:0; background:url('MOLDURA.png') center/contain no-repeat; pointer-events:none}
+    .ponteiro{position:absolute; left:50%; top:-16px; transform:translateX(-50%); width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent; border-top:38px solid var(--primary); filter:drop-shadow(0 4px 6px rgba(0,0,0,.35)); z-index:3}
     #resultado{min-height:28px; font-weight:700; color:var(--ok); font-family:var(--font-title)}
 
     /* Ações na roleta: coluna centralizada */
@@ -140,7 +104,6 @@
           <div class="moldura" aria-hidden="true"></div>
         </div>
 
-        <!-- Botões: Girar centralizado e Voltar logo abaixo -->
         <div class="acoes">
           <button id="btnGirar" class="btn">Girar Roleta</button>
           <button class="btn sec" onclick="showScreen('login')">Voltar ao início</button>
@@ -153,99 +116,51 @@
   </div>
 
   <script>
-    /* ===== Navegação / Fullscreen ===== */
-    function showScreen(n){
-      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-      document.getElementById(`screen-${n}`).classList.add('active');
-      if(n==='jogo') preencherNome();
-    }
-    function entrarFullscreen(){
-      const el=document.documentElement;
-      el.requestFullscreen?.()||el.webkitRequestFullscreen?.()||el.msRequestFullscreen?.();
-    }
-    function irParaJogo(){
-      const nome=document.getElementById('nome').value.trim();
-      const fone=document.getElementById('fone').value.trim();
-      if(!nome||!fone) return false;
-      localStorage.setItem('nome',nome);
-      localStorage.setItem('fone',fone);
-      preencherNome();
-      showScreen('jogo');
-      return false;
-    }
-    function preencherNome(){
-      document.getElementById('nomeUsuario').textContent = localStorage.getItem('nome') || 'Participante';
-    }
+    /* Navegação / Fullscreen */
+    function showScreen(n){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(`screen-${n}`).classList.add('active');if(n==='jogo')preencherNome()}
+    function entrarFullscreen(){const el=document.documentElement;el.requestFullscreen?.()||el.webkitRequestFullscreen?.()||el.msRequestFullscreen?.()}
+    function irParaJogo(){const nome=document.getElementById('nome').value.trim();const fone=document.getElementById('fone').value.trim();if(!nome||!fone)return false;localStorage.setItem('nome',nome);localStorage.setItem('fone',fone);preencherNome();showScreen('jogo');return false}
+    function preencherNome(){document.getElementById('nomeUsuario').textContent=localStorage.getItem('nome')||'Participante'}
 
-    /* ===== Configs da girada (ajuste fácil) ===== */
-    const SPIN_DURATION = 4000;                        // ms  (ex.: 3000, 5000…)
-    const SPIN_EASING   = 'cubic-bezier(.18,.72,.14,1)'; // curva de aceleração/frenagem
-    const MIN_TURNS     = 4;                           // voltas mínimas
-    const MAX_TURNS     = 6;                           // voltas máximas
+    /* Configs da girada (mantidas) */
+    const SPIN_DURATION=4000, SPIN_EASING='cubic-bezier(.18,.72,.14,1)', MIN_TURNS=4, MAX_TURNS=6;
 
-    /* ===== Mapeamento da roleta de 10 FATIAS (sentido horário a partir do topo) ===== */
-    const LABELS = [
-      "DONUT",
-      "QUEM SABE NA PROXIMA",
-      "MARCA PAGINA",
-      "AZAR NO JOGO SORTE NO AMOR",
-      "TENTE OUTRA VEZ",
-      "AHHH... QUE PENA",
-      "SHOYU",
-      "QUEM SABE NO JOGO DA MEMORIA",
-      "MOLHO YAKISSOBA",
-      "NAO FOI DESSA VEZ"
-    ];
-    const N = LABELS.length;           // = 10
-    const STEP = 360 / N;              // tamanho de cada fatia em graus
+    /* Mapa das 10 fatias (sentido horário a partir do topo) */
+    const LABELS=["DONUT","QUEM SABE NA PROXIMA","MARCA PAGINA","AZAR NO JOGO SORTE NO AMOR","TENTE OUTRA VEZ","AHHH... QUE PENA","SHOYU","QUEM SABE NO JOGO DA MEMORIA","MOLHO YAKISSOBA","NAO FOI DESSA VEZ"];
+    const N=LABELS.length, STEP=360/N;
+    const PHASE_SECTORS=0, PHASE=PHASE_SECTORS*STEP;
 
-    /* Deslocamento fino caso o PNG esteja 1 fatia adiantado/atrasado.
-       Use -1 ou +1 se o texto aparecer uma fatia fora do ponteiro. */
-    const PHASE_SECTORS = 0;
-    const PHASE = PHASE_SECTORS * STEP;
+    let total=0,spinning=false;
 
-    let total = 0;
-    let spinning = false;
-
-    // Calcula rotação adicional para cair no CENTRO do índice escolhido
     function deltaToIndex(idx){
-      const now = ((total % 360) + 360) % 360;
-      const centerRel = (idx * STEP) % 360;                 // centros em 0, 36, 72, ...
-      const targetAbs = (360 - centerRel + PHASE + 360) % 360; // ângulo final que coloca o centro no ponteiro
-      const delta360  = (targetAbs - now + 360) % 360;
-
-      const turns = MIN_TURNS + Math.floor(Math.random() * (MAX_TURNS - MIN_TURNS + 1));
-      return turns * 360 + delta360;
+      const now=((total%360)+360)%360;
+      const centerRel=(idx*STEP)%360;
+      const targetAbs=(360-centerRel+PHASE+360)%360;
+      const delta360=(targetAbs-now+360)%360;
+      const turns=MIN_TURNS+Math.floor(Math.random()*(MAX_TURNS-MIN_TURNS+1));
+      return turns*360+delta360;
     }
 
     function girar(){
-      if (spinning) return;
-      const wheel = document.getElementById('roleta'); if(!wheel) return;
+      if(spinning)return;
+      const wheel=document.getElementById('roleta'); if(!wheel)return;
+      spinning=true; document.getElementById('resultado').textContent='';
 
-      spinning = true;
-      document.getElementById('resultado').textContent = '';
+      const idx=Math.floor(Math.random()*N);
+      const delta=deltaToIndex(idx);
 
-      const idx   = Math.floor(Math.random() * N);   // escolhe a fatia
-      const delta = deltaToIndex(idx);               // e gira para o centro dela
+      total+=delta;
+      wheel.style.transition=`transform ${SPIN_DURATION}ms ${SPIN_EASING}`;
+      wheel.style.transform=`rotate(${total}deg)`;
 
-      total += delta;
-      wheel.style.transition = `transform ${SPIN_DURATION}ms ${SPIN_EASING}`;
-      wheel.style.transform  = `rotate(${total}deg)`;
-
-      setTimeout(()=>{
-        const label = LABELS[idx];                   // sempre o mesmo do ponteiro
-        document.getElementById('resultado').textContent = `🎉 Resultado: ${label}`;
-        navigator.vibrate?.([20,30,20]);
-        spinning = false;
-      }, SPIN_DURATION);
+      setTimeout(()=>{document.getElementById('resultado').textContent=`🎉 Resultado: ${LABELS[idx]}`;navigator.vibrate?.([20,30,20]);spinning=false;},SPIN_DURATION);
     }
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-      document.getElementById('btnGirar')?.addEventListener('click', girar);
-    });
+    document.addEventListener('DOMContentLoaded',()=>{document.getElementById('btnGirar')?.addEventListener('click',girar)});
   </script>
 </body>
 </html>
+
 
 
 
