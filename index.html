@@ -195,7 +195,7 @@
     ];
 
     const N=LABELS.length, STEP=360/N;
-    const PHASE_SECTORS= -2; /* se o PNG estiver 1 fatia deslocado, mude para -1 ou +1 */
+    const PHASE_SECTORS= 0; /* se o PNG estiver 1 fatia deslocado, mude para -1 ou +1 */
     const PHASE=PHASE_SECTORS*STEP;
 
     let total=0, spinning=false;
@@ -205,7 +205,7 @@
       const centerRel=(idx*STEP + STEP/2) % 360;             // centro da fatia (relativo ao topo)
       const targetAbs=(360 - centerRel + PHASE + 360) % 360; // ângulo de parada p/ ficar no ponteiro
       const delta360=(targetAbs - now + 360) % 360;
-      const turns=4 + Math.floor(Math.random()*3);           // 4..6 voltas
+      const turns=5 + Math.floor(Math.random()*3);           // 4..6 voltas
       return turns*360 + delta360;
     }
 
@@ -235,6 +235,7 @@
   </script>
 </body>
 </html>
+
 
 
 
