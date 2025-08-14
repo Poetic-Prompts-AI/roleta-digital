@@ -7,17 +7,44 @@
   <link rel="preload" href="FUNDO2.png" as="image">
   <link rel="preload" href="PREMIOS.png" as="image">
   <link rel="preload" href="MOLDURA.png" as="image">
+  <!-- Pré-carrega as fontes (opcional) -->
+  <link rel="preload" href="Anja Eliane.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="Anja Eliane accent002.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="Sweet Snow.otf" as="font" type="font/otf" crossorigin>
+
   <style>
+    /* ====== Fontes personalizadas ====== */
+    @font-face{
+      font-family: 'AnjaEliane';
+      src: url('Anja Eliane.ttf') format('truetype');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face{
+      font-family: 'AnjaEliane';
+      src: url('Anja Eliane accent002.ttf') format('truetype');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+    @font-face{
+      font-family: 'SweetSnow';
+      src: url('Sweet Snow.otf') format('opentype');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+
     :root{
       --bg-card:#f2d8c9;  /* fundo interno */
       --accent:#404a91;   /* títulos/textos */
       --primary:#ce2e3a;  /* botões/ponteiro */
       --ok:#1b8f5a;       /* feedback */
+
+      /* Escolha rápida das fontes na interface */
+      --font-title: 'SweetSnow', 'AnjaEliane', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      --font-ui:    'AnjaEliane', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
+
     *{box-sizing:border-box}
     html,body{
       height:100%; margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family: var(--font-ui);
       color:var(--accent);
       background:url('FUNDO2.png') center/cover no-repeat fixed;
     }
@@ -36,11 +63,15 @@
       box-shadow:0 10px 30px rgba(0,0,0,.35);
       margin-inline:auto;
     }
-    h1,h2{margin:0 0 10px}
+    h1,h2{margin:0 0 10px; font-family: var(--font-title)}
     form{display:grid; gap:12px; margin-top:6px}
     input,button{padding:14px 16px; font-size:16px; border-radius:12px; border:2px solid transparent}
     input{background:#fff; color:#222; border-color:#ffffffaa}
-    .btn{background:var(--primary); color:#fff; border:0; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .btn{
+      background:var(--primary); color:#fff; border:0; cursor:pointer;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      font-family: var(--font-title);
+    }
     .btn:active{transform:translateY(1px)}
     .btn.sec{background:#fff; color:var(--accent); border:2px solid var(--accent)}
     .logo{margin-top:18px; display:inline-grid; gap:8px; justify-items:center; cursor:pointer}
@@ -68,7 +99,7 @@
       filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));
       z-index:3;
     }
-    #resultado{min-height:28px; font-weight:700; color:var(--ok)}
+    #resultado{min-height:28px; font-weight:700; color:var(--ok); font-family: var(--font-title)}
 
     /* Botões na roleta: coluna centralizada */
     .acoes{
@@ -149,8 +180,7 @@
       document.getElementById('nomeUsuario').textContent = localStorage.getItem('nome') || 'Participante';
     }
 
-    /* ROLETA — gira para o CENTRO do setor escolhido
-       Ordem HORÁRIA a partir do topo (12h), como na sua arte */
+    /* ROLETA — gira para o CENTRO do setor escolhido */
     const LABELS=[
       "DONUT",
       "QUEM SABE NA PROXIMA",
@@ -166,9 +196,7 @@
       "TENTE OUTRA VEZ"
     ];
     const N=LABELS.length, STEP=360/N;
-
-    /* ajuste fino (se o PNG estiver deslocado 1 fatia, mude para -1 ou +1) */
-    const PHASE_SECTORS=0;
+    const PHASE_SECTORS=0; /* se o PNG estiver 1 fatia deslocado, mude para -1 ou +1 */
     const PHASE=PHASE_SECTORS*STEP;
 
     let total=0, spinning=false;
@@ -187,7 +215,6 @@
       const wheel=document.getElementById('roleta'); if(!wheel) return;
       spinning=true; document.getElementById('resultado').textContent='';
 
-      // escolhe o setor e calcula rotação para o CENTRO dele
       const idx=Math.floor(Math.random()*N);
       const delta=deltaToIndex(idx);
 
@@ -209,6 +236,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
