@@ -27,8 +27,8 @@
       --font-title:'SweetSnow','AnjaEliane',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       --font-ui:'AnjaEliane',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 
-      /* Escala de TODOS os elementos do jogo (roleta) */
-      --game-scale: 1.2; /* +20% */
+      /* Escala de elementos do jogo (roleta) */
+      --game-scale: 1.2; /* +20% em todos os elementos gráficos da tela do jogo */
     }
 
     *{box-sizing:border-box}
@@ -57,7 +57,7 @@
     /* Roleta */
     .hero{display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px}
 
-    /* >>> AUMENTO DE 20% EM TODOS OS ELEMENTOS DA TELA DA ROLETA */
+    /* >>> AUMENTO DE 20% EM TODOS OS ELEMENTOS DA TELA DO JOGO (gráfico) */
     #screen-jogo .hero{
       transform: scale(var(--game-scale));
       transform-origin: top center;
@@ -75,9 +75,15 @@
     .acoes .btn{min-width:220px}
     .acoes .btn.sec{min-width:200px}
 
-    /* >>> AUMENTO DE 20% SOMENTE DA FONTE NA TELA DA ROLETA */
-    #screen-jogo{ font-size:120%; }                 /* títulos e textos que herdam tamanho */
-    #screen-jogo .btn{ font-size:calc(16px * 1.2); }/* sobrescreve o 16px fixo dos botões */
+    /* >>> AUMENTO DE FONTE (+20%) NAS DUAS TELAS
+       - Login: 100% → 120%
+       - Jogo:  (já estava 120%) → 144% agora
+       Também sobe a fonte de botões e inputs nessas telas (eram 16px fixos). */
+    #screen-login{ font-size:120%; }
+    #screen-login .btn, #screen-login input{ font-size:calc(16px * 1.2); }
+
+    #screen-jogo{ font-size:144%; }
+    #screen-jogo .btn{ font-size:calc(16px * 1.44); }
   </style>
 </head>
 <body>
@@ -193,8 +199,6 @@
   </script>
 </body>
 </html>
-
-
 
 
 
