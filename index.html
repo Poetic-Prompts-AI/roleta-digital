@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Roleta da Sorte</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preload" href="FUNDO2.png" as="image">
+  <link rel="preload" href="FUNDO.png" as="image">
   <link rel="preload" href="PREMIOS.png" as="image">
   <link rel="preload" href="MOLDURA.png" as="image">
   <style>
@@ -19,7 +19,7 @@
       height:100%; margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--accent);
-      background:url('FUNDO2.png') center/cover no-repeat fixed;
+      background:url('FUNDO.png') center/cover no-repeat fixed;
     }
     .app{min-height:100%; display:grid; place-items:center; padding:20px; text-align:center}
 
@@ -161,6 +161,52 @@
       "SHOYU",
       "QUASE... TENTE OUTRA VEZ",
       "MOLHO YAKISSOBA",
-      "N
+      "NAO FOI DESSA VEZ",
+      "TENTE OUTRA VEZ",
+      "TENTE OUTRA VEZ"
+    ];
+    const N=LABELS.length, STEP=360/N;
 
+    /* ajuste fino (se o PNG estiver deslocado 1 fatia, mude para -1 ou +1) */
+    const PHASE_SECTORS=0;
+    const PHASE=PHASE_SECTORS*STEP;
+
+    let total=0, spinning=false;
+
+    function deltaToIndex(idx){
+      const now=((total%360)+360)%360;
+      const centerRel=(idx*STEP + STEP/2) % 360;             // centro da fatia (relativo ao topo)
+      const targetAbs=(360 - centerRel + PHASE + 360) % 360; // ângulo de parada p/ ficar no ponteiro
+      const delta360=(targetAbs - now + 360) % 360;
+      const turns=4 + Math.floor(Math.random()*3);           // 4..6 voltas
+      return turns*360 + delta360;
+    }
+
+    function girar(){
+      if(spinning) return;
+      const wheel=document.getElementById('roleta'); if(!wheel) return;
+      spinning=true; document.getElementById('resultado').textContent='';
+
+      // escolhe o setor e calcula rotação para o CENTRO dele
+      const idx=Math.floor(Math.random()*N);
+      const delta=deltaToIndex(idx);
+
+      total+=delta;
+      wheel.style.transition="transform 4s cubic-bezier(.18,.72,.14,1)";
+      wheel.style.transform=`rotate(${total}deg)`;
+
+      setTimeout(()=>{
+        const label=LABELS[idx]; // sempre o mesmo que o ponteiro aponta
+        document.getElementById('resultado').textContent=`🎉 Resultado: ${label}`;
+        navigator.vibrate?.([20,30,20]);
+        spinning=false;
+      },4000);
+    }
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.getElementById('btnGirar')?.addEventListener('click',girar);
+    });
+  </script>
+</body>
+</html>
 
